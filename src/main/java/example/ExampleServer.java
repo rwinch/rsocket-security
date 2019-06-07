@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.MapReactiveUserDetailsServi
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import rsocket.PayloadInterceptorSocketAcceptor;
-import security.ReactiveAuthenticationManagerPayloadInterceptor;
+import security.AuthenticationPayloadInterceptor;
 
 import java.util.Arrays;
 
@@ -59,7 +59,7 @@ public class ExampleServer {
 //					}
 //				})
 				.acceptor(new PayloadInterceptorSocketAcceptor(new HelloHandler(),
-						Arrays.asList(new ReactiveAuthenticationManagerPayloadInterceptor(manager))))
+						Arrays.asList(new AuthenticationPayloadInterceptor(manager))))
 				.transport(TcpServerTransport.create(7878))
 				.start()
 				.block()

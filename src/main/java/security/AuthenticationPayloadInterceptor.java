@@ -18,7 +18,7 @@ import java.util.Base64;
 /**
  * @author Rob Winch
  */
-public class ReactiveAuthenticationManagerPayloadInterceptor implements PayloadInterceptor {
+public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 
 	private final ReactiveAuthenticationManager authenticationManager;
 
@@ -37,7 +37,7 @@ public class ReactiveAuthenticationManagerPayloadInterceptor implements PayloadI
 		return new UsernamePasswordAuthenticationToken(username, password);
 	};
 
-	public ReactiveAuthenticationManagerPayloadInterceptor(ReactiveAuthenticationManager authenticationManager) {
+	public AuthenticationPayloadInterceptor(ReactiveAuthenticationManager authenticationManager) {
 		this.authenticationManager = authenticationManager;
 	}
 
