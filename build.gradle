@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group 'example'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/libs-snapshot' }
+    maven { url "https://oss.jfrog.org/artifactory/libs-snapshot" } // RSocket
+}
+
+dependencies {
+//    implementation platform('org.springframework.boot:spring-boot-dependencies:2.2.0.BUILD-SNAPSHOT')
+    implementation 'org.springframework.boot:spring-boot-starter-security:2.2.0.BUILD-SNAPSHOT'
+    implementation 'io.rsocket:rsocket-core:0.12.2-RC4-SNAPSHOT'
+    implementation 'io.rsocket:rsocket-transport-netty:0.12.2-RC4-SNAPSHOT'
+    testCompile 'junit:junit:4.12'
+}
