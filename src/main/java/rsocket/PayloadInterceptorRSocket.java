@@ -65,9 +65,9 @@ public class PayloadInterceptorRSocket extends RSocketProxy {
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
-		Flux<Payload> payloadFlux = Flux.from(payloads)
-			.flatMap(p -> intercept(p));
-		return this.source.requestChannel(payloadFlux);
+		return Flux.from(payloads)
+			.flatMap(p -> intercept(p))
+			.transform(this.source::requestChannel);
 	}
 
 	@Override
