@@ -1,19 +1,19 @@
 package example;
 
-import io.rsocket.RSocket;
 import io.rsocket.RSocketFactory;
 import io.rsocket.frame.decoder.PayloadDecoder;
-import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.transport.netty.server.TcpServerTransport;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import rsocket.PayloadInterceptorSocketAcceptor;
+import rsocket.PayloadInterceptor;
+import rsocket.PayloadRSocketInterceptor;
 import security.AuthenticationPayloadInterceptor;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Rob Winch
@@ -33,33 +33,14 @@ public class ExampleServer {
 		MapReactiveUserDetailsService uds = new MapReactiveUserDetailsService(
 				rob, rossen);
 		ReactiveAuthenticationManager manager = new UserDetailsRepositoryReactiveAuthenticationManager(uds);
+		HelloHandler helloHandler = new HelloHandler();
+		List<PayloadInterceptor> payloadInterceptors = Arrays
+				.asList(new AuthenticationPayloadInterceptor(manager));
 		RSocketFactory.receive()
 				// Enable Zero Copy
 				.frameDecoder(PayloadDecoder.ZERO_COPY)
-//				.addConnectionPlugin(new DuplexConnectionInterceptor() {
-//					@Override
-//					public DuplexConnection apply(Type type,
-//							DuplexConnection duplexConnection) {
-//						System.out.println("Connection intercepted");
-//						return duplexConnection;
-//					}
-//				})
-				.addRequesterPlugin(new RSocketInterceptor() {
-					@Override
-					public RSocket apply(RSocket rSocket) {
-						System.out.println("Intercepted request");
-						return rSocket;
-					}
-				})
-//				.addResponderPlugin(new RSocketInterceptor() {
-//					@Override
-//					public RSocket apply(RSocket rSocket) {
-//						System.out.println("Intercepted Response");
-//						return rSocket;
-//					}
-//				})
-				.acceptor(new PayloadInterceptorSocketAcceptor(new HelloHandler(),
-						Arrays.asList(new AuthenticationPayloadInterceptor(manager))))
+				.addResponderPlugin(new PayloadRSocketInterceptor(payloadInterceptors))
+				.acceptor(helloHandler)
 				.transport(TcpServerTransport.create(7878))
 				.start()
 				.block()

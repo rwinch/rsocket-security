@@ -43,7 +43,7 @@ public class ExampleClient {
 		}
 
 		public Mono<Void> sayHiTo(String name) {
-			String credentials = Base64.getEncoder().encodeToString("rob2:password".getBytes());
+			String credentials = Base64.getEncoder().encodeToString("rob:password".getBytes());
 			return this.rSocket.requestResponse(ByteBufPayload.create(name, credentials))
 					.doOnNext(p -> System.out.println(p.getDataUtf8()))
 					.then();
