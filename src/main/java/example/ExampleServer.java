@@ -8,8 +8,8 @@ import org.springframework.security.authentication.UserDetailsRepositoryReactive
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import rsocket.PayloadInterceptor;
-import rsocket.PayloadRSocketInterceptor;
+import rsocket.interceptor.PayloadInterceptor;
+import rsocket.interceptor.PayloadRSocketInterceptor;
 import security.AuthenticationPayloadInterceptor;
 
 import java.util.Arrays;

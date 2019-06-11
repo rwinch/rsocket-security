@@ -1,4 +1,4 @@
-package rsocket;
+package rsocket.interceptor;
 
 import io.rsocket.Payload;
 import io.rsocket.RSocket;

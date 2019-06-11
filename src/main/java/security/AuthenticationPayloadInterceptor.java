@@ -1,8 +1,6 @@
 package security;
 
 import io.rsocket.Payload;
-import io.rsocket.RSocket;
-import io.rsocket.util.RSocketProxy;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -11,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 import reactor.core.publisher.Mono;
-import rsocket.PayloadInterceptor;
+import rsocket.interceptor.PayloadInterceptor;
 
 import java.util.Base64;
 
