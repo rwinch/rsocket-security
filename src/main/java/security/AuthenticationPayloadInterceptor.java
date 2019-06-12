@@ -1,8 +1,6 @@
 package security;
 
 import io.rsocket.Payload;
-import io.rsocket.metadata.CompositeMetadata;
-import io.rsocket.metadata.CompositeMetadataFlyweight;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -46,7 +44,6 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 	}
 
 	public Mono<Payload> intercept(Payload payload) {
-		System.out.println("intercept!");
 		return Mono.defer(() -> {
 			Authentication authentication = this.authenticationConverter.convert(payload);
 			return Mono.justOrEmpty(authentication)
