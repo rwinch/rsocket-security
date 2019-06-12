@@ -7,13 +7,11 @@ import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataFlyweight;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Rob Winch
@@ -34,13 +32,11 @@ public class BasicAuthenticationUtils {
 	}
 
 	private static Optional<ByteBuf> findByType(Payload payload, String type) {
-		CompositeMetadata metadata = new CompositeMetadata(payload.metadata(), false);
-		for (CompositeMetadata.Entry entry : metadata) {
-			System.out.println(entry.getMimeType());
-			if (type.equals(entry.getMimeType())) {
-				return Optional.of(entry.getContent());
-			}
-		}
-		return Optional.empty();
+		CompositeMetadata compositeMetadata = new CompositeMetadata(payload.metadata(),
+				false);
+		return StreamSupport.stream(compositeMetadata.spliterator(), false)
+				.filter(entry -> type.equals(entry.getMimeType()))
+				.map(CompositeMetadata.Entry::getContent)
+				.findFirst();
 	}
 }
