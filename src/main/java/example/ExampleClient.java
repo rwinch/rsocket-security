@@ -12,7 +12,8 @@ import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.util.ByteBufPayload;
 import reactor.core.publisher.Mono;
-import rsocket.metadata.BasicAuthenticationUtils;
+import rsocket.metadata.SecurityMetadataFlyweight;
+import rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
 
 /**
  * @author Rob Winch
@@ -53,8 +54,8 @@ public class ExampleClient {
 			CompositeByteBuf metadata = ByteBufAllocator.DEFAULT.compositeBuffer();
 			CompositeMetadataFlyweight.encodeAndAddMetadata(metadata, ByteBufAllocator.DEFAULT, WellKnownMimeType.MESSAGE_RSOCKET_ROUTING, route);
 
-			BasicAuthenticationUtils.UsernamePassword credentials = new BasicAuthenticationUtils.UsernamePassword("rob", "password");
-			BasicAuthenticationUtils.writeBasic(metadata, credentials);
+			UsernamePassword credentials = new UsernamePassword("rob", "password");
+			SecurityMetadataFlyweight.writeBasic(metadata, credentials);
 			ByteBuf data = ByteBufUtil.writeUtf8(ByteBufAllocator.DEFAULT, name);
 			return this.rSocket.requestResponse(ByteBufPayload.create(data, metadata))
 					.doOnNext(p -> System.out.println(p.getDataUtf8()))
