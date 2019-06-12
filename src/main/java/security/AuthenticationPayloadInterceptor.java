@@ -2,7 +2,6 @@ package security;
 
 import io.rsocket.Payload;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -11,8 +10,6 @@ import org.springframework.security.core.context.SecurityContextImpl;
 import reactor.core.publisher.Mono;
 import rsocket.interceptor.PayloadInterceptor;
 import rsocket.metadata.BasicAuthenticationUtils;
-
-import java.util.Base64;
 
 /**
  * @author Rob Winch
@@ -23,19 +20,12 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 
 	private Converter<Payload, Authentication> authenticationConverter = payload -> {
 		// FIXME: If error we should just return null
-		String encoded = BasicAuthenticationUtils.readBasic(payload).orElse(null);
-		if (encoded == null) {
+		BasicAuthenticationUtils.UsernamePassword credentials = BasicAuthenticationUtils.readBasic(payload).orElse(null);
+		if (credentials == null) {
 			return null;
 		}
-		byte[] decoded = Base64.getDecoder().decode(encoded);
-		String token = new String(decoded);
-		int delim = token.indexOf(":");
-
-		if (delim == -1) {
-			throw new BadCredentialsException("Invalid basic authentication token");
-		}
-		String username = token.substring(0, delim);
-		String password = token.substring(delim + 1);
+		String username = credentials.getUsername();
+		String password = credentials.getPassword();
 		return new UsernamePasswordAuthenticationToken(username, password);
 	};
 
