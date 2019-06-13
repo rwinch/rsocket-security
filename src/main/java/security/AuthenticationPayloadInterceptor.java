@@ -10,7 +10,6 @@ import org.springframework.security.core.context.SecurityContextImpl;
 import reactor.core.publisher.Mono;
 import rsocket.interceptor.PayloadInterceptor;
 import rsocket.metadata.SecurityMetadataFlyweight;
-import rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
 
 /**
  * @author Rob Winch
@@ -19,17 +18,10 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 
 	private final ReactiveAuthenticationManager authenticationManager;
 
-	private Converter<Payload, Authentication> authenticationConverter = payload -> {
-		// FIXME: If error we should just return null
-		UsernamePassword credentials = SecurityMetadataFlyweight
-				.readBasic(payload.metadata()).orElse(null);
-		if (credentials == null) {
-			return null;
-		}
-		String username = credentials.getUsername();
-		String password = credentials.getPassword();
-		return new UsernamePasswordAuthenticationToken(username, password);
-	};
+	private Converter<Payload, Authentication> authenticationConverter = payload ->
+		SecurityMetadataFlyweight.readBasic(payload.metadata())
+			.map(credentials -> new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()))
+			.orElse(null);
 
 	public AuthenticationPayloadInterceptor(ReactiveAuthenticationManager authenticationManager) {
 		this.authenticationManager = authenticationManager;
