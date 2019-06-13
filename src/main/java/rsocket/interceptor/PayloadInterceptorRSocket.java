@@ -85,4 +85,12 @@ public class PayloadInterceptorRSocket extends RSocketProxy {
 					Mono.just(payload)
 		);
 	}
+
+	@Override
+	public String toString() {
+		if (this.currentInterceptor != null) {
+			return getClass().getSimpleName() + "[currentInterceptor=" + this.currentInterceptor + "]";
+		}
+		return getClass().getSimpleName() + "[source=" + this.source + "]";
+	}
 }
