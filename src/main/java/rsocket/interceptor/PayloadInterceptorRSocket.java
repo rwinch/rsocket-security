@@ -15,32 +15,34 @@ import java.util.ListIterator;
  */
 public class PayloadInterceptorRSocket extends RSocketProxy {
 
-	private final List<PayloadInterceptor> interceptors;
-
 	private final PayloadInterceptor currentInterceptor;
 
 	private final PayloadInterceptorRSocket next;
 
 	public PayloadInterceptorRSocket(RSocket delegate, List<PayloadInterceptor> interceptors) {
 		super(delegate);
-		this.interceptors = interceptors;
+		if (interceptors == null) {
+			throw new IllegalArgumentException("interceptors cannot be null");
+		}
+		if (interceptors.isEmpty()) {
+			throw new IllegalArgumentException("interceptors cannot be empty");
+		}
 		PayloadInterceptorRSocket interceptor = init(interceptors, delegate);
 		this.currentInterceptor = interceptor.currentInterceptor;
 		this.next = interceptor.next;
 	}
 
 	private static PayloadInterceptorRSocket init(List<PayloadInterceptor> interceptors, RSocket delegate) {
-		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(interceptors, delegate, null, null);
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(delegate, null, null);
 		ListIterator<? extends PayloadInterceptor> iterator = interceptors.listIterator(interceptors.size());
 		while (iterator.hasPrevious()) {
-			interceptor = new PayloadInterceptorRSocket(interceptors, delegate, iterator.previous(), interceptor);
+			interceptor = new PayloadInterceptorRSocket(delegate, iterator.previous(), interceptor);
 		}
 		return interceptor;
 	}
 
-	private PayloadInterceptorRSocket(List<PayloadInterceptor> interceptors, RSocket delegate, PayloadInterceptor currentInterceptor, PayloadInterceptorRSocket next) {
+	private PayloadInterceptorRSocket(RSocket delegate, PayloadInterceptor currentInterceptor, PayloadInterceptorRSocket next) {
 		super(delegate);
-		this.interceptors = interceptors;
 		this.currentInterceptor = currentInterceptor;
 		this.next = next;
 	}
