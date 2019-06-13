@@ -80,10 +80,15 @@ public class PayloadInterceptorRSocket extends RSocketProxy {
 
 	private Mono<Payload> intercept(Payload payload) {
 		return Mono.defer(() ->
-			this.currentInterceptor != null && this.next != null ?
-					this.currentInterceptor.intercept(payload) :
+			shouldIntercept() ?
+					this.currentInterceptor.intercept(payload)
+							.flatMap(p -> this.next.intercept(p)) :
 					Mono.just(payload)
 		);
+	}
+
+	private boolean shouldIntercept() {
+		return this.currentInterceptor != null && this.next != null;
 	}
 
 	@Override
