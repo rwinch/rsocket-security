@@ -37,6 +37,9 @@ public class PayloadInterceptorRSocket extends RSocketProxy {
 
 	public PayloadInterceptorRSocket(RSocket delegate, List<PayloadInterceptor> interceptors) {
 		super(delegate);
+		if (delegate == null) {
+			throw new IllegalArgumentException("delegate cannot be null");
+		}
 		if (interceptors == null) {
 			throw new IllegalArgumentException("interceptors cannot be null");
 		}
@@ -65,7 +68,7 @@ public class PayloadInterceptorRSocket extends RSocketProxy {
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
-		return  intercept(payload)
+		return intercept(payload)
 				.flatMap(p -> this.source.fireAndForget(p));
 	}
 

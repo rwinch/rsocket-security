@@ -22,11 +22,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.test.publisher.PublisherProbe;
 import reactor.test.publisher.TestPublisher;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Matchers.any;
@@ -57,6 +59,30 @@ public class PayloadInterceptorRSocketTests {
 	@Mock
 	Payload payload3;
 
+	@Test
+	public void constructorWhenNullDelegateThenException() {
+		this.delegate = null;
+		List<PayloadInterceptor> interceptors = Arrays.asList(this.interceptor);
+		assertThatCode(() -> {
+			new PayloadInterceptorRSocket(this.delegate, interceptors);
+		})
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	public void constructorWhenNullInterceptorsThenException() {
+		List<PayloadInterceptor> interceptors = null;
+		assertThatCode(() -> new PayloadInterceptorRSocket(this.delegate, interceptors))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	public void constructorWhenEmptyInterceptorsThenException() {
+		List<PayloadInterceptor> interceptors = Collections.emptyList();
+		assertThatCode(() -> new PayloadInterceptorRSocket(this.delegate, interceptors))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
 	// single interceptor
 
 	@Test
@@ -83,6 +109,128 @@ public class PayloadInterceptorRSocketTests {
 				Arrays.asList(this.interceptor));
 
 		assertThatCode(() -> interceptor.fireAndForget(this.payload).block()).isEqualTo(expected);
+
+		verify(this.interceptor).intercept(this.payload);
+		verifyZeroInteractions(this.delegate);
+	}
+
+	@Test
+	public void requestResponseWhenInterceptorCompletesThenDelegateInvoked() {
+		when(this.interceptor.intercept(any())).thenReturn(Mono.just(this.payload));
+		when(this.delegate.requestResponse(any())).thenReturn(Mono.just(this.payload));
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThat(interceptor.requestResponse(this.payload).block()).isEqualTo(this.payload);
+
+		verify(this.interceptor).intercept(this.payload);
+		verify(this.delegate).requestResponse(this.payload);
+	}
+
+	@Test
+	public void requestResponseWhenInterceptorErrorsThenDelegateNotInvoked() {
+		RuntimeException expected = new RuntimeException("Oops");
+		when(this.interceptor.intercept(any())).thenReturn(Mono.error(expected));
+		when(this.delegate.requestResponse(any())).thenReturn(Mono.empty());
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThatCode(() -> interceptor.requestResponse(this.payload).block()).isEqualTo(expected);
+
+		verify(this.interceptor).intercept(this.payload);
+		verifyZeroInteractions(this.delegate);
+	}
+
+	@Test
+	public void requestStreamWhenInterceptorCompletesThenDelegateInvoked() {
+		when(this.interceptor.intercept(any())).thenReturn(Mono.just(this.payload));
+		when(this.delegate.requestStream(any())).thenReturn(Flux.just(this.payload));
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThat(interceptor.requestStream(this.payload).collectList().block()).containsOnly(this.payload);
+
+		verify(this.interceptor).intercept(this.payload);
+		verify(this.delegate).requestStream(this.payload);
+	}
+
+	@Test
+	public void requestStreamWhenInterceptorErrorsThenDelegateNotInvoked() {
+		RuntimeException expected = new RuntimeException("Oops");
+		when(this.interceptor.intercept(any())).thenReturn(Mono.error(expected));
+		when(this.delegate.requestStream(any())).thenReturn(Flux.empty());
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThatCode(() -> interceptor.requestStream(this.payload).collectList().block()).isEqualTo(expected);
+
+		verify(this.interceptor).intercept(this.payload);
+		verifyZeroInteractions(this.delegate);
+	}
+
+	@Test
+	public void requestChannelWhenInterceptorCompletesThenDelegateInvoked() {
+		when(this.interceptor.intercept(any())).thenReturn(Mono.just(this.payload));
+		when(this.delegate.requestChannel(any())).thenAnswer(a -> a.getArguments()[0]);
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThat(interceptor.requestChannel(Flux.just(this.payload)).collectList().block()).containsOnly(this.payload);
+
+		verify(this.interceptor).intercept(this.payload);
+		verify(this.delegate).requestChannel(any());
+	}
+
+	@Test
+	public void requestChannelWhenInterceptorErrorsThenDelegateNotSubscribed() {
+		TestPublisher<Payload> testPayload = TestPublisher.<Payload>create();
+		Mono<Payload> p = testPayload.mono();
+		RuntimeException expected = new RuntimeException("Oops");
+		when(this.interceptor.intercept(any())).thenReturn(Mono.error(expected));
+		when(this.delegate.requestChannel(any())).thenAnswer(a -> {
+			Flux<Payload> input = (Flux<Payload>) a.getArguments()[0];
+			return input.flatMap(i -> p);
+		});
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThatCode(() -> interceptor.requestChannel(Flux.just(this.payload)).collectList().block()).isEqualTo(expected);
+
+		verify(this.interceptor).intercept(this.payload);
+		testPayload.assertNoSubscribers();
+	}
+
+	@Test
+	public void metadataPushWhenInterceptorCompletesThenDelegateInvoked() {
+		when(this.interceptor.intercept(any())).thenReturn(Mono.just(this.payload));
+		when(this.delegate.metadataPush(any())).thenReturn(Mono.empty());
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThat(interceptor.metadataPush(this.payload).block());
+
+		verify(this.interceptor).intercept(this.payload);
+		verify(this.delegate).metadataPush(this.payload);
+	}
+
+	@Test
+	public void metadataPushWhenInterceptorErrorsThenDelegateNotInvoked() {
+		RuntimeException expected = new RuntimeException("Oops");
+		when(this.interceptor.intercept(any())).thenReturn(Mono.error(expected));
+		when(this.delegate.metadataPush(any())).thenReturn(Mono.empty());
+
+		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(this.delegate,
+				Arrays.asList(this.interceptor));
+
+		assertThatCode(() -> interceptor.metadataPush(this.payload).block())
+			.isEqualTo(expected);
 
 		verify(this.interceptor).intercept(this.payload);
 		verifyZeroInteractions(this.delegate);
