@@ -28,6 +28,12 @@ public class PayloadRSocketInterceptor implements RSocketInterceptor {
 	private final List<PayloadInterceptor> interceptors;
 
 	public PayloadRSocketInterceptor(List<PayloadInterceptor> interceptors) {
+		if (interceptors == null) {
+			throw new IllegalArgumentException("interceptors cannot be null");
+		}
+		if (interceptors.isEmpty()) {
+			throw new IllegalArgumentException("interceptors cannot be empty");
+		}
 		this.interceptors = interceptors;
 	}
 
