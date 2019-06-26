@@ -22,18 +22,16 @@ import io.rsocket.util.RSocketProxy;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * @author Rob Winch
  */
 public class PayloadInterceptorRSocket extends RSocketProxy {
 
-	private final PayloadInterceptor currentInterceptor;
-
-	private final PayloadInterceptorRSocket next;
+	private final List<PayloadInterceptor> interceptors;
 
 	public PayloadInterceptorRSocket(RSocket delegate, List<PayloadInterceptor> interceptors) {
 		super(delegate);
@@ -46,75 +44,68 @@ public class PayloadInterceptorRSocket extends RSocketProxy {
 		if (interceptors.isEmpty()) {
 			throw new IllegalArgumentException("interceptors cannot be empty");
 		}
-		PayloadInterceptorRSocket interceptor = init(interceptors, delegate);
-		this.currentInterceptor = interceptor.currentInterceptor;
-		this.next = interceptor.next;
-	}
-
-	private static PayloadInterceptorRSocket init(List<PayloadInterceptor> interceptors, RSocket delegate) {
-		PayloadInterceptorRSocket interceptor = new PayloadInterceptorRSocket(delegate, null, null);
-		ListIterator<? extends PayloadInterceptor> iterator = interceptors.listIterator(interceptors.size());
-		while (iterator.hasPrevious()) {
-			interceptor = new PayloadInterceptorRSocket(delegate, iterator.previous(), interceptor);
-		}
-		return interceptor;
-	}
-
-	private PayloadInterceptorRSocket(RSocket delegate, PayloadInterceptor currentInterceptor, PayloadInterceptorRSocket next) {
-		super(delegate);
-		this.currentInterceptor = currentInterceptor;
-		this.next = next;
+		this.interceptors = interceptors;
 	}
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
 		return intercept(payload)
-				.flatMap(p -> this.source.fireAndForget(p));
+			.flatMap(context ->
+				this.source.fireAndForget(payload)
+					.subscriberContext(context)
+			);
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
 		return intercept(payload)
-			.flatMap(p -> this.source.requestResponse(p));
+			.flatMap(context ->
+				this.source.requestResponse(payload)
+					.subscriberContext(context)
+			);
 	}
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
 		return intercept(payload)
-			.flatMapMany(p -> this.source.requestStream(p));
+			.flatMapMany(context ->
+				this.source.requestStream(payload)
+					.subscriberContext(context)
+			);
 	}
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
 		return Flux.from(payloads)
-			.flatMap(p -> intercept(p))
-			.transform(this.source::requestChannel);
+			.flatMap(p -> intercept(p)
+				.flatMapMany(context -> this.source
+					.requestChannel(payloads)
+					.subscriberContext(context)
+				)
+			);
 	}
 
 	@Override
 	public Mono<Void> metadataPush(Payload payload) {
 		return intercept(payload)
-			.flatMap(p -> this.source.metadataPush(p));
+			.flatMap(c -> this.source
+					.metadataPush(payload)
+					.subscriberContext(c)
+			);
 	}
 
-	private Mono<Payload> intercept(Payload payload) {
-		return Mono.defer(() ->
-			shouldIntercept() ?
-					this.currentInterceptor.intercept(payload)
-							.flatMap(p -> this.next.intercept(p)) :
-					Mono.just(payload)
-		);
-	}
-
-	private boolean shouldIntercept() {
-		return this.currentInterceptor != null && this.next != null;
+	private Mono<Context> intercept(Payload payload) {
+		return Mono.defer(() -> {
+			ContextPayloadChain chain = new ContextPayloadChain(this.interceptors);
+			return chain.next(payload)
+				.then(Mono.fromCallable(() -> chain.getContext()))
+				.defaultIfEmpty(Context.empty());
+		});
 	}
 
 	@Override
 	public String toString() {
-		if (this.currentInterceptor != null) {
-			return getClass().getSimpleName() + "[currentInterceptor=" + this.currentInterceptor + "]";
-		}
-		return getClass().getSimpleName() + "[source=" + this.source + "]";
+		return getClass().getSimpleName() + "[source=" + this.source + ",interceptors="
+				+ this.interceptors + "]";
 	}
 }

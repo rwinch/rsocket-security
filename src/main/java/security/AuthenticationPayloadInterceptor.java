@@ -22,8 +22,9 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
+import rsocket.interceptor.PayloadChain;
 import rsocket.interceptor.PayloadInterceptor;
 import rsocket.metadata.SecurityMetadataFlyweight;
 
@@ -40,22 +41,22 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 			.orElse(null);
 
 	public AuthenticationPayloadInterceptor(ReactiveAuthenticationManager authenticationManager) {
+		Assert.notNull(authenticationManager, "authenticationManager cannot be null");
 		this.authenticationManager = authenticationManager;
 	}
 
-	public Mono<Payload> intercept(Payload payload) {
+	public Mono<Void> intercept(Payload payload, PayloadChain chain) {
 		return Mono.defer(() -> {
 			Authentication authentication = this.authenticationConverter.convert(payload);
 			return Mono.justOrEmpty(authentication)
 					.flatMap(a -> this.authenticationManager.authenticate(authentication))
-					.flatMap(a -> onAuthenticationSuccess(payload, a));
+					.flatMap(a -> onAuthenticationSuccess(chain.next(payload), a));
 		});
 	}
 
-	private Mono<Payload> onAuthenticationSuccess(Payload payload, Authentication authentication) {
-		SecurityContextImpl securityContext = new SecurityContextImpl(authentication);
-		return Mono.just(payload)
-				.subscriberContext(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
+	private Mono<Void> onAuthenticationSuccess(Mono<Void> payload, Authentication authentication) {
+		return payload
+				.subscriberContext(ReactiveSecurityContextHolder.withAuthentication(authentication));
 	}
 
 }
