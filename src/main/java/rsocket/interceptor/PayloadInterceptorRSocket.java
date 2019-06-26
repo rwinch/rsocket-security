@@ -29,7 +29,7 @@ import java.util.ListIterator;
 /**
  * @author Rob Winch
  */
-public class PayloadInterceptorRSocket extends RSocketProxy {
+public class PayloadInterceptorRSocket extends RSocketProxy implements PayloadChain {
 
 	private final PayloadInterceptor currentInterceptor;
 
@@ -68,40 +68,39 @@ public class PayloadInterceptorRSocket extends RSocketProxy {
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
-		return intercept(payload)
-				.flatMap(p -> this.source.fireAndForget(p));
+		return next(payload)
+			.flatMap(p -> this.source.fireAndForget(p));
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
-		return intercept(payload)
-			.flatMap(p -> this.source.requestResponse(p));
+		return next(payload)
+			.then(this.source.requestResponse(payload));
 	}
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
-		return intercept(payload)
+		return next(payload)
 			.flatMapMany(p -> this.source.requestStream(p));
 	}
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
 		return Flux.from(payloads)
-			.flatMap(p -> intercept(p))
+			.flatMap(p -> next(p))
 			.transform(this.source::requestChannel);
 	}
 
 	@Override
 	public Mono<Void> metadataPush(Payload payload) {
-		return intercept(payload)
+		return next(payload)
 			.flatMap(p -> this.source.metadataPush(p));
 	}
 
-	private Mono<Payload> intercept(Payload payload) {
+	public Mono<Payload> next(Payload payload) {
 		return Mono.defer(() ->
 			shouldIntercept() ?
-					this.currentInterceptor.intercept(payload)
-							.flatMap(p -> this.next.intercept(p)) :
+					this.currentInterceptor.intercept(payload, this.next) :
 					Mono.just(payload)
 		);
 	}

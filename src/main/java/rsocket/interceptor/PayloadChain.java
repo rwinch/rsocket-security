@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
 /**
  * @author Rob Winch
  */
-public interface PayloadInterceptor {
-	Mono<Payload> intercept(Payload payload, PayloadChain chain);
+public interface PayloadChain {
+
+	Mono<Payload> next(Payload payload);
 }
