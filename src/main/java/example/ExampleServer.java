@@ -27,9 +27,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import rsocket.interceptor.PayloadInterceptor;
 import rsocket.interceptor.PayloadRSocketInterceptor;
 import security.AuthenticationPayloadInterceptor;
+import security.AuthorizationPayloadInterceptor;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.springframework.security.authorization.AuthorityReactiveAuthorizationManager.hasRole;
 
 /**
  * @author Rob Winch
@@ -39,7 +42,7 @@ public class ExampleServer {
 		UserDetails rob = User.withDefaultPasswordEncoder()
 			.username("rob")
 			.password("password")
-			.roles("USER")
+			.roles("USER", "ADMIN")
 			.build();
 		UserDetails rossen = User.withDefaultPasswordEncoder()
 			.username("rossen")
@@ -51,7 +54,7 @@ public class ExampleServer {
 		ReactiveAuthenticationManager manager = new UserDetailsRepositoryReactiveAuthenticationManager(uds);
 		HelloHandler helloHandler = new HelloHandler();
 		List<PayloadInterceptor> payloadInterceptors = Arrays
-				.asList(new AuthenticationPayloadInterceptor(manager));
+				.asList(new AuthenticationPayloadInterceptor(manager), new AuthorizationPayloadInterceptor(hasRole("ADMIN")));
 		RSocketFactory.receive()
 				// Enable Zero Copy
 				.frameDecoder(PayloadDecoder.ZERO_COPY)
