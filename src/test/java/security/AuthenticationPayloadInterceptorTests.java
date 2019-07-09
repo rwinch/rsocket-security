@@ -30,10 +30,7 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
 import reactor.core.publisher.Mono;
-import rsocket.interceptor.PayloadChain;
 import rsocket.metadata.SecurityMetadataFlyweight;
 import rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
 
@@ -73,7 +70,7 @@ public class AuthenticationPayloadInterceptorTests {
 		interceptor.intercept(requestPayload, authenticationPayloadChain)
 			.block();
 
-		Authentication authentication = authenticationPayloadChain.authentication;
+		Authentication authentication = authenticationPayloadChain.getAuthentication();
 
 		verify(this.authenticationManager).authenticate(this.authenticationArg.capture());
 		assertThat(this.authenticationArg.getValue()).isEqualToComparingFieldByField(new UsernamePasswordAuthenticationToken("user", "password"));
@@ -87,15 +84,4 @@ public class AuthenticationPayloadInterceptorTests {
 		return DefaultPayload.create(ByteBufAllocator.DEFAULT.buffer(), metadata);
 	}
 
-	static class AuthenticationPayloadChain implements PayloadChain {
-		private Authentication authentication;
-
-		@Override
-		public Mono<Void> next(Payload payload) {
-			return ReactiveSecurityContextHolder.getContext()
-				.map(SecurityContext::getAuthentication)
-				.doOnNext(a -> this.authentication = a)
-				.then();
-		}
-	}
 }
