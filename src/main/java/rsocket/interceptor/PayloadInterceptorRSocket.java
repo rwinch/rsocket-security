@@ -18,6 +18,7 @@ package rsocket.interceptor;
 
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
+import io.rsocket.ResponderRSocket;
 import io.rsocket.util.RSocketProxy;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -29,7 +30,7 @@ import java.util.List;
 /**
  * @author Rob Winch
  */
-public class PayloadInterceptorRSocket extends RSocketProxy {
+public class PayloadInterceptorRSocket extends RSocketProxy implements ResponderRSocket {
 
 	private final List<PayloadInterceptor> interceptors;
 
