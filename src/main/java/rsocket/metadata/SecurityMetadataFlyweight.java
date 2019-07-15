@@ -32,7 +32,7 @@ import java.util.stream.StreamSupport;
  * @author Rob Winch
  */
 public class SecurityMetadataFlyweight {
-	public static final String BASIC_AUTHENTICATION_MIME_TYPE = "x.spring-security/authentication/basic.v0";
+	public static final String BASIC_AUTHENTICATION_MIME_TYPE = "x.spring-security/authentication.basic.v0";
 
 	public static void writeBasic(CompositeByteBuf compositeMetaData, UsernamePassword usernamePassword) {
 		String username = usernamePassword.getUsername();
