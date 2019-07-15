@@ -81,7 +81,7 @@ public class SecurityMetadataFlyweight {
 		return Optional.of(new UsernamePassword(username, password));
 	}
 
-	private static Optional<ByteBuf> findByType(ByteBuf metadata, String type) {
+	public static Optional<ByteBuf> findByType(ByteBuf metadata, String type) {
 		CompositeMetadata compositeMetadata = new CompositeMetadata(metadata,
 				false);
 		return StreamSupport.stream(compositeMetadata.spliterator(), false)
