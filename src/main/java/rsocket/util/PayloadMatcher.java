@@ -20,6 +20,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -74,8 +75,8 @@ public interface PayloadMatcher {
 		 * @param variables
 		 * @return
 		 */
-		public static Mono<MatchResult> match(Map<String, Object> variables) {
-			return Mono.just(new MatchResult(true, variables));
+		public static Mono<MatchResult> match(Map<String, ? extends Object> variables) {
+			return Mono.just(new MatchResult(true, variables == null ? null : new HashMap<String, Object>(variables)));
 		}
 
 		/**
