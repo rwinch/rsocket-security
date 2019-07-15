@@ -31,11 +31,15 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+import reactor.test.publisher.PublisherProbe;
+import rsocket.interceptor.PayloadChain;
 import rsocket.metadata.SecurityMetadataFlyweight;
 import rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,6 +79,26 @@ public class AuthenticationPayloadInterceptorTests {
 		verify(this.authenticationManager).authenticate(this.authenticationArg.capture());
 		assertThat(this.authenticationArg.getValue()).isEqualToComparingFieldByField(new UsernamePasswordAuthenticationToken("user", "password"));
 		assertThat(authentication).isEqualTo(expectedAuthentication);
+	}
+
+	@Test
+	public void interceptWhenAuthenticationSuccessThenChainSubscribedOnce() {
+		AuthenticationPayloadInterceptor interceptor = new AuthenticationPayloadInterceptor(
+				this.authenticationManager);
+		Payload requestPayload = createRequestPayload();
+		TestingAuthenticationToken expectedAuthentication =
+				new TestingAuthenticationToken("user","password");
+		when(this.authenticationManager.authenticate(any())).thenReturn(Mono.just(
+				expectedAuthentication));
+
+		PublisherProbe<Void> voidResult = PublisherProbe.empty();
+		PayloadChain chain = mock(PayloadChain.class);
+		when(chain.next(any())).thenReturn(voidResult.mono());
+
+
+		StepVerifier.create(interceptor.intercept(requestPayload, chain))
+			.then(() -> assertThat(voidResult.subscribeCount()).isEqualTo(1))
+			.verifyComplete();
 	}
 
 	private Payload createRequestPayload() {

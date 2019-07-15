@@ -49,6 +49,7 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 		return Mono.defer(() -> {
 			Authentication authentication = this.authenticationConverter.convert(payload);
 			return Mono.justOrEmpty(authentication)
+					.switchIfEmpty(chain.next(payload).then(Mono.empty()))
 					.flatMap(a -> this.authenticationManager.authenticate(authentication))
 					.flatMap(a -> onAuthenticationSuccess(chain.next(payload), a));
 		});
