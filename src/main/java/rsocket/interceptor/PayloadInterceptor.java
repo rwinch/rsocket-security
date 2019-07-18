@@ -16,12 +16,11 @@
 
 package rsocket.interceptor;
 
-import io.rsocket.Payload;
 import reactor.core.publisher.Mono;
 
 /**
  * @author Rob Winch
  */
 public interface PayloadInterceptor {
-	Mono<Void> intercept(Payload payload, PayloadChain chain);
+	Mono<Void> intercept(PayloadExchange exchange, PayloadInterceptorChain chain);
 }

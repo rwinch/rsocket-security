@@ -16,15 +16,14 @@
 
 package security;
 
-import io.rsocket.Payload;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.core.Authentication;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import rsocket.interceptor.PayloadExchange;
 import rsocket.util.PayloadAuthorizationContext;
-import rsocket.util.PayloadMatcher;
+import rsocket.util.PayloadExchangeMatcher;
 import rsocket.util.PayloadMatcherEntry;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ import java.util.List;
 /**
  * @author Rob Winch
  */
-public class PayloadMatcherReactiveAuthorizationManager implements ReactiveAuthorizationManager<Payload> {
+public class PayloadMatcherReactiveAuthorizationManager implements ReactiveAuthorizationManager<PayloadExchange> {
 	private final List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings;
 
 	private PayloadMatcherReactiveAuthorizationManager(List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings) {
@@ -41,13 +40,13 @@ public class PayloadMatcherReactiveAuthorizationManager implements ReactiveAutho
 	}
 
 	@Override
-	public Mono<AuthorizationDecision> check(Mono<Authentication> authentication, Payload payload) {
+	public Mono<AuthorizationDecision> check(Mono<Authentication> authentication, PayloadExchange exchange) {
 		return Flux.fromIterable(this.mappings)
-				.concatMap(mapping -> mapping.getMatcher().matches(payload)
-						.filter(PayloadMatcher.MatchResult::isMatch)
+				.concatMap(mapping -> mapping.getMatcher().matches(exchange)
+						.filter(PayloadExchangeMatcher.MatchResult::isMatch)
 						.map(r -> r.getVariables())
 						.flatMap(variables -> mapping.getEntry()
-								.check(authentication, new PayloadAuthorizationContext(payload, variables))
+								.check(authentication, new PayloadAuthorizationContext(exchange, variables))
 						)
 				)
 				.next()

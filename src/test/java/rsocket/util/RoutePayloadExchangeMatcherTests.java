@@ -16,25 +16,18 @@
 
 package rsocket.util;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.CompositeByteBuf;
-import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
-import io.rsocket.metadata.CompositeMetadataFlyweight;
-import io.rsocket.util.DefaultPayload;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.messaging.rsocket.annotation.support.DefaultMetadataExtractor;
 import org.springframework.messaging.rsocket.annotation.support.MetadataExtractor;
+import org.springframework.util.MimeType;
 import org.springframework.util.RouteMatcher;
-import org.springframework.web.util.pattern.PathPatternParser;
-import org.springframework.web.util.pattern.PathPatternRouteMatcher;
+import rsocket.interceptor.DefaultPayloadExchange;
+import rsocket.interceptor.PayloadExchange;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
@@ -46,12 +39,17 @@ import static org.mockito.Mockito.when;
  * @author Rob Winch
  */
 @RunWith(MockitoJUnitRunner.class)
-public class RoutePayloadMatcherTests {
+public class RoutePayloadExchangeMatcherTests {
+	// FIXME: This needs to be passed in as an argument PayloadExchange
+	static final MimeType COMPOSITE_METADATA = new MimeType("message", "x.rsocket.composite-metadata.v0");
+
 	@Mock
 	private MetadataExtractor metadataExtractor;
 
 	@Mock
 	private RouteMatcher routeMatcher;
+
+	private PayloadExchange exchange;
 
 	@Mock
 	private Payload payload;
@@ -61,19 +59,20 @@ public class RoutePayloadMatcherTests {
 
 	private String pattern;
 
-	private RoutePayloadMatcher matcher;
+	private RoutePayloadExchangeMatcher matcher;
 
 	@Before
 	public void setup() {
 		this.pattern = "a.b";
-		this.matcher = new RoutePayloadMatcher(this.metadataExtractor, this.routeMatcher, this.pattern);
+		this.matcher = new RoutePayloadExchangeMatcher(this.metadataExtractor, this.routeMatcher, this.pattern);
+		this.exchange = new DefaultPayloadExchange(this.payload, COMPOSITE_METADATA, null);
 	}
 
 	@Test
 	public void matchesWhenNoRouteThenNotMatch() {
 		when(this.metadataExtractor.extract(any(), any()))
 				.thenReturn(Collections.emptyMap());
-		PayloadMatcher.MatchResult result = this.matcher.matches(this.payload).block();
+		PayloadExchangeMatcher.MatchResult result = this.matcher.matches(this.exchange).block();
 		assertThat(result.isMatch()).isFalse();
 	}
 
@@ -82,7 +81,7 @@ public class RoutePayloadMatcherTests {
 		String route = "route";
 		when(this.metadataExtractor.extract(any(), any()))
 				.thenReturn(Collections.singletonMap(MetadataExtractor.ROUTE_KEY, route));
-		PayloadMatcher.MatchResult result = this.matcher.matches(this.payload).block();
+		PayloadExchangeMatcher.MatchResult result = this.matcher.matches(this.exchange).block();
 		assertThat(result.isMatch()).isFalse();
 	}
 
@@ -93,7 +92,7 @@ public class RoutePayloadMatcherTests {
 				.thenReturn(Collections.singletonMap(MetadataExtractor.ROUTE_KEY, route));
 		when(this.routeMatcher.parseRoute(any())).thenReturn(this.route);
 		when(this.routeMatcher.matchAndExtract(any(), any())).thenReturn(Collections.emptyMap());
-		PayloadMatcher.MatchResult result = this.matcher.matches(this.payload).block();
+		PayloadExchangeMatcher.MatchResult result = this.matcher.matches(this.exchange).block();
 		assertThat(result.isMatch()).isTrue();
 	}
 
@@ -105,7 +104,7 @@ public class RoutePayloadMatcherTests {
 				.thenReturn(Collections.singletonMap(MetadataExtractor.ROUTE_KEY, route));
 		when(this.routeMatcher.parseRoute(any())).thenReturn(this.route);
 		when(this.routeMatcher.matchAndExtract(any(), any())).thenReturn(variables);
-		PayloadMatcher.MatchResult result = this.matcher.matches(this.payload).block();
+		PayloadExchangeMatcher.MatchResult result = this.matcher.matches(this.exchange).block();
 		assertThat(result.isMatch()).isTrue();
 		assertThat(result.getVariables()).containsAllEntriesOf(variables);
 	}

@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 /**
+ * FIXME: Consider adding integration with MetadataExtractor
  * @author Rob Winch
  */
 public class SecurityMetadataFlyweight {

@@ -14,25 +14,18 @@
  * limitations under the License.
  */
 
-package rsocket.util;
+package rsocket.interceptor;
+
+import io.rsocket.Payload;
+import org.springframework.util.MimeType;
 
 /**
  * @author Rob Winch
  */
-public class PayloadMatcherEntry<T> {
-	private final PayloadExchangeMatcher matcher;
-	private final T entry;
+public interface PayloadExchange {
+	Payload getPayload();
 
-	public PayloadMatcherEntry(PayloadExchangeMatcher matcher, T entry) {
-		this.matcher = matcher;
-		this.entry = entry;
-	}
+	MimeType getDataMimeType();
 
-	public PayloadExchangeMatcher getMatcher() {
-		return this.matcher;
-	}
-
-	public T getEntry() {
-		return this.entry;
-	}
+	MimeType getMetadataMimeType();
 }

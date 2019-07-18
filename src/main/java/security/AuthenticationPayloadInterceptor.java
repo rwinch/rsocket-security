@@ -16,7 +16,6 @@
 
 package security;
 
-import io.rsocket.Payload;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +23,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
-import rsocket.interceptor.PayloadChain;
+import rsocket.interceptor.PayloadInterceptorChain;
+import rsocket.interceptor.PayloadExchange;
 import rsocket.interceptor.PayloadInterceptor;
 import rsocket.metadata.SecurityMetadataFlyweight;
 
@@ -35,8 +35,8 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 
 	private final ReactiveAuthenticationManager authenticationManager;
 
-	private Converter<Payload, Authentication> authenticationConverter = payload ->
-		SecurityMetadataFlyweight.readBasic(payload.metadata())
+	private Converter<PayloadExchange, Authentication> authenticationConverter = exchange ->
+		SecurityMetadataFlyweight.readBasic(exchange.getPayload().metadata())
 			.map(credentials -> new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()))
 			.orElse(null);
 
@@ -45,13 +45,13 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 		this.authenticationManager = authenticationManager;
 	}
 
-	public Mono<Void> intercept(Payload payload, PayloadChain chain) {
+	public Mono<Void> intercept(PayloadExchange exchange, PayloadInterceptorChain chain) {
 		return Mono.defer(() -> {
-			Authentication authentication = this.authenticationConverter.convert(payload);
+			Authentication authentication = this.authenticationConverter.convert(exchange);
 			return Mono.justOrEmpty(authentication)
-					.switchIfEmpty(chain.next(payload).then(Mono.empty()))
+					.switchIfEmpty(chain.next(exchange).then(Mono.empty()))
 					.flatMap(a -> this.authenticationManager.authenticate(authentication))
-					.flatMap(a -> onAuthenticationSuccess(chain.next(payload), a));
+					.flatMap(a -> onAuthenticationSuccess(chain.next(exchange), a));
 		});
 	}
 

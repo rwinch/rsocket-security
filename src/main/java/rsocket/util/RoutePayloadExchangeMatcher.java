@@ -16,12 +16,11 @@
 
 package rsocket.util;
 
-import io.rsocket.Payload;
 import org.springframework.messaging.rsocket.annotation.support.MetadataExtractor;
 import org.springframework.util.Assert;
-import org.springframework.util.MimeType;
 import org.springframework.util.RouteMatcher;
 import reactor.core.publisher.Mono;
+import rsocket.interceptor.PayloadExchange;
 
 import java.util.Map;
 import java.util.Optional;
@@ -32,10 +31,7 @@ import java.util.Optional;
  *
  * @author Rob Winch
  */
-public class RoutePayloadMatcher implements PayloadMatcher {
-
-	// FIXME: This needs to be passed in as an argument PayloadExchange
-	static final MimeType COMPOSITE_METADATA = new MimeType("message", "x.rsocket.composite-metadata.v0");
+public class RoutePayloadExchangeMatcher implements PayloadExchangeMatcher {
 
 	private final String pattern;
 
@@ -43,7 +39,7 @@ public class RoutePayloadMatcher implements PayloadMatcher {
 
 	private final RouteMatcher routeMatcher;
 
-	public RoutePayloadMatcher(MetadataExtractor metadataExtractor,
+	public RoutePayloadExchangeMatcher(MetadataExtractor metadataExtractor,
 			RouteMatcher routeMatcher, String pattern) {
 		Assert.notNull(pattern, "pattern cannot be null");
 		this.metadataExtractor = metadataExtractor;
@@ -52,9 +48,9 @@ public class RoutePayloadMatcher implements PayloadMatcher {
 	}
 
 	@Override
-	public Mono<MatchResult> matches(Payload payload) {
+	public Mono<MatchResult> matches(PayloadExchange exchange) {
 		Map<String, Object> metadata = this.metadataExtractor
-				.extract(payload, COMPOSITE_METADATA);
+				.extract(exchange.getPayload(), exchange.getMetadataMimeType());
 		return Optional.ofNullable((String) metadata.get(MetadataExtractor.ROUTE_KEY))
 			.map(routeValue -> this.routeMatcher.parseRoute(routeValue))
 			.map(route -> this.routeMatcher.matchAndExtract(this.pattern, route))

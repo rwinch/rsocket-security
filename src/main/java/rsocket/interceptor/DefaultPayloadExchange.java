@@ -17,12 +17,38 @@
 package rsocket.interceptor;
 
 import io.rsocket.Payload;
-import reactor.core.publisher.Mono;
+import org.springframework.util.MimeType;
 
 /**
  * @author Rob Winch
  */
-public interface PayloadChain {
+public class DefaultPayloadExchange implements PayloadExchange {
 
-	Mono<Void> next(Payload payload);
+	private final Payload payload;
+
+	private final MimeType metadataMimeType;
+
+	private final MimeType dataMimeType;
+
+	public DefaultPayloadExchange(Payload payload, MimeType metadataMimeType,
+			MimeType dataMimeType) {
+		this.payload = payload;
+		this.metadataMimeType = metadataMimeType;
+		this.dataMimeType = dataMimeType;
+	}
+
+	@Override
+	public Payload getPayload() {
+		return this.payload;
+	}
+
+	@Override
+	public MimeType getMetadataMimeType() {
+		return this.metadataMimeType;
+	}
+
+	@Override
+	public MimeType getDataMimeType() {
+		return this.dataMimeType;
+	}
 }

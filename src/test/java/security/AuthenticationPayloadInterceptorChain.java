@@ -16,21 +16,21 @@
 
 package security;
 
-import io.rsocket.Payload;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import reactor.core.publisher.Mono;
-import rsocket.interceptor.PayloadChain;
+import rsocket.interceptor.PayloadInterceptorChain;
+import rsocket.interceptor.PayloadExchange;
 
 /**
  * @author Rob Winch
  */
-class AuthenticationPayloadChain implements PayloadChain {
+class AuthenticationPayloadInterceptorChain implements PayloadInterceptorChain {
 	private Authentication authentication;
 
 	@Override
-	public Mono<Void> next(Payload payload) {
+	public Mono<Void> next(PayloadExchange exchange) {
 		return ReactiveSecurityContextHolder.getContext().map(SecurityContext::getAuthentication)
 				.doOnNext(a -> this.setAuthentication(a)).then();
 	}

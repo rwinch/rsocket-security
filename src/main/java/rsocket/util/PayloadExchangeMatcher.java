@@ -15,27 +15,26 @@
  */
 package rsocket.util;
 
-import io.rsocket.Payload;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import rsocket.interceptor.PayloadExchange;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * An interface for determining if a {@link PayloadMatcher} matches.
+ * An interface for determining if a {@link PayloadExchangeMatcher} matches.
  * @author Rob Winch
  * @since 5.2
  */
-public interface PayloadMatcher {
+public interface PayloadExchangeMatcher {
 
 	/**
 	 * Determines if a request matches or not
-	 * @param payload
+	 * @param exchange
 	 * @return
 	 */
-	Mono<MatchResult> matches(Payload payload);
+	Mono<MatchResult> matches(PayloadExchange exchange);
 
 	/**
 	 * The result of matching

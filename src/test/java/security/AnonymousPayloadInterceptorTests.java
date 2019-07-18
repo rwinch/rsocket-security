@@ -16,7 +16,6 @@
 
 package security;
 
-import io.rsocket.Payload;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import rsocket.interceptor.PayloadExchange;
 
 import java.util.List;
 
@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.*;
 @RunWith(MockitoJUnitRunner.class)
 public class AnonymousPayloadInterceptorTests {
 	@Mock
-	private Payload payload;
+	private PayloadExchange exchange;
 
 	private AnonymousPayloadInterceptor interceptor;
 
@@ -81,9 +81,9 @@ public class AnonymousPayloadInterceptorTests {
 
 	@Test
 	public void interceptWhenNoAuthenticationThenAnonymousAuthentication() {
-		AuthenticationPayloadChain chain = new AuthenticationPayloadChain();
+		AuthenticationPayloadInterceptorChain chain = new AuthenticationPayloadInterceptorChain();
 
-		this.interceptor.intercept(this.payload, chain).block();
+		this.interceptor.intercept(this.exchange, chain).block();
 
 		Authentication authentication = chain.getAuthentication();
 
@@ -92,11 +92,11 @@ public class AnonymousPayloadInterceptorTests {
 
 	@Test
 	public void interceptWhenAuthenticationThenOriginalAuthentication() {
-		AuthenticationPayloadChain chain = new AuthenticationPayloadChain();
+		AuthenticationPayloadInterceptorChain chain = new AuthenticationPayloadInterceptorChain();
 		TestingAuthenticationToken expected =
 				new TestingAuthenticationToken("test", "password");
 
-		this.interceptor.intercept(this.payload, chain)
+		this.interceptor.intercept(this.exchange, chain)
 			.subscriberContext(ReactiveSecurityContextHolder.withAuthentication(expected))
 			.block();
 

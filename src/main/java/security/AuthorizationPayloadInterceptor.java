@@ -16,33 +16,33 @@
 
 package security;
 
-import io.rsocket.Payload;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import reactor.core.publisher.Mono;
-import rsocket.interceptor.PayloadChain;
+import rsocket.interceptor.PayloadInterceptorChain;
+import rsocket.interceptor.PayloadExchange;
 import rsocket.interceptor.PayloadInterceptor;
 
 /**
  * @author Rob Winch
  */
 public class AuthorizationPayloadInterceptor implements PayloadInterceptor {
-	private final ReactiveAuthorizationManager<Payload> authorizationManager;
+	private final ReactiveAuthorizationManager<PayloadExchange> authorizationManager;
 
 	public AuthorizationPayloadInterceptor(
-			ReactiveAuthorizationManager<Payload> authorizationManager) {
+			ReactiveAuthorizationManager<PayloadExchange> authorizationManager) {
 		this.authorizationManager = authorizationManager;
 	}
 
 	@Override
-	public Mono<Void> intercept(Payload payload, PayloadChain chain) {
+	public Mono<Void> intercept(PayloadExchange exchange, PayloadInterceptorChain chain) {
 		return ReactiveSecurityContextHolder.getContext()
 				.filter(c -> c.getAuthentication() != null)
 				.map(SecurityContext::getAuthentication)
 				.switchIfEmpty(Mono.error(() -> new AuthenticationCredentialsNotFoundException("An Authentication (possibly AnonymousAuthenticationToken) is required.")))
-				.as(authentication -> this.authorizationManager.verify(authentication, payload))
-				.then(chain.next(payload));
+				.as(authentication -> this.authorizationManager.verify(authentication, exchange))
+				.then(chain.next(exchange));
 	}
 }

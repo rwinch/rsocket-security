@@ -16,14 +16,14 @@
 
 package security;
 
-import io.rsocket.Payload;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
-import rsocket.interceptor.PayloadChain;
+import rsocket.interceptor.PayloadInterceptorChain;
+import rsocket.interceptor.PayloadExchange;
 import rsocket.interceptor.PayloadInterceptor;
 
 import java.util.List;
@@ -65,15 +65,15 @@ public class AnonymousPayloadInterceptor implements PayloadInterceptor {
 
 
 	@Override
-	public Mono<Void> intercept(Payload payload, PayloadChain chain) {
+	public Mono<Void> intercept(PayloadExchange exchange, PayloadInterceptorChain chain) {
 		return ReactiveSecurityContextHolder.getContext()
 				.switchIfEmpty(Mono.defer(() -> {
 					AnonymousAuthenticationToken authentication = new AnonymousAuthenticationToken(
 							this.key, this.principal, this.authorities);
-					return chain.next(payload)
+					return chain.next(exchange)
 							.subscriberContext(ReactiveSecurityContextHolder.withAuthentication(authentication))
 							.then(Mono.empty());
 				}))
-				.flatMap(securityContext -> chain.next(payload));
+				.flatMap(securityContext -> chain.next(exchange));
 	}
 }

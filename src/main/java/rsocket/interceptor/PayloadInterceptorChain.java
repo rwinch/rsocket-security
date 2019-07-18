@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-package rsocket.util;
+package rsocket.interceptor;
+
+import reactor.core.publisher.Mono;
 
 /**
  * @author Rob Winch
  */
-public class PayloadMatcherEntry<T> {
-	private final PayloadExchangeMatcher matcher;
-	private final T entry;
+public interface PayloadInterceptorChain {
 
-	public PayloadMatcherEntry(PayloadExchangeMatcher matcher, T entry) {
-		this.matcher = matcher;
-		this.entry = entry;
-	}
-
-	public PayloadExchangeMatcher getMatcher() {
-		return this.matcher;
-	}
-
-	public T getEntry() {
-		return this.entry;
-	}
+	Mono<Void> next(PayloadExchange exchange);
 }

@@ -16,7 +16,6 @@
 
 package rsocket.interceptor;
 
-import io.rsocket.Payload;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
@@ -24,49 +23,49 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * A {@link PayloadChain} which exposes the Reactor {@link Context} via a member variable.
+ * A {@link PayloadInterceptorChain} which exposes the Reactor {@link Context} via a member variable.
  * This class is not Thread safe, so a new instance must be created for each Thread.
  *
  * @author Rob Winch
  */
-class ContextPayloadChain implements PayloadChain {
+class ContextPayloadInterceptorChain implements PayloadInterceptorChain {
 
 	private final PayloadInterceptor currentInterceptor;
 
-	private final ContextPayloadChain next;
+	private final ContextPayloadInterceptorChain next;
 
 	private Context context;
 
-	public ContextPayloadChain(List<PayloadInterceptor> interceptors) {
+	public ContextPayloadInterceptorChain(List<PayloadInterceptor> interceptors) {
 		if (interceptors == null) {
 			throw new IllegalArgumentException("interceptors cannot be null");
 		}
 		if (interceptors.isEmpty()) {
 			throw new IllegalArgumentException("interceptors cannot be empty");
 		}
-		ContextPayloadChain interceptor = init(interceptors);
+		ContextPayloadInterceptorChain interceptor = init(interceptors);
 		this.currentInterceptor = interceptor.currentInterceptor;
 		this.next = interceptor.next;
 	}
 
-	private static ContextPayloadChain init(List<PayloadInterceptor> interceptors) {
-		ContextPayloadChain interceptor = new ContextPayloadChain(null, null);
+	private static ContextPayloadInterceptorChain init(List<PayloadInterceptor> interceptors) {
+		ContextPayloadInterceptorChain interceptor = new ContextPayloadInterceptorChain(null, null);
 		ListIterator<? extends PayloadInterceptor> iterator = interceptors.listIterator(interceptors.size());
 		while (iterator.hasPrevious()) {
-			interceptor = new ContextPayloadChain(iterator.previous(), interceptor);
+			interceptor = new ContextPayloadInterceptorChain(iterator.previous(), interceptor);
 		}
 		return interceptor;
 	}
 
-	private ContextPayloadChain(PayloadInterceptor currentInterceptor, ContextPayloadChain next) {
+	private ContextPayloadInterceptorChain(PayloadInterceptor currentInterceptor, ContextPayloadInterceptorChain next) {
 		this.currentInterceptor = currentInterceptor;
 		this.next = next;
 	}
 
-	public Mono<Void> next(Payload payload) {
+	public Mono<Void> next(PayloadExchange exchange) {
 		return Mono.defer(() ->
 				shouldIntercept() ?
-						this.currentInterceptor.intercept(payload, this.next) :
+						this.currentInterceptor.intercept(exchange, this.next) :
 						Mono.subscriberContext()
 							.doOnNext(c -> this.context = c)
 							.then()

@@ -21,6 +21,7 @@ import io.rsocket.RSocket;
 import io.rsocket.ResponderRSocket;
 import io.rsocket.util.RSocketProxy;
 import org.reactivestreams.Publisher;
+import org.springframework.util.MimeType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
@@ -31,6 +32,8 @@ import java.util.List;
  * @author Rob Winch
  */
 public class PayloadInterceptorRSocket extends RSocketProxy implements ResponderRSocket {
+	// FIXME: This needs to be passed in as an argument PayloadExchange
+	private static final MimeType COMPOSITE_METADATA = new MimeType("message", "x.rsocket.composite-metadata.v0");
 
 	private final List<PayloadInterceptor> interceptors;
 
@@ -97,8 +100,9 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 
 	private Mono<Context> intercept(Payload payload) {
 		return Mono.defer(() -> {
-			ContextPayloadChain chain = new ContextPayloadChain(this.interceptors);
-			return chain.next(payload)
+			ContextPayloadInterceptorChain chain = new ContextPayloadInterceptorChain(this.interceptors);
+			// FIXME: We need to obtain the MimeTypes with hooks from
+			return chain.next(new DefaultPayloadExchange(payload, COMPOSITE_METADATA, null))
 				.then(Mono.fromCallable(() -> chain.getContext()))
 				.defaultIfEmpty(Context.empty());
 		});

@@ -16,8 +16,7 @@
 
 package rsocket.util;
 
-import io.rsocket.Payload;
-import org.springframework.web.server.ServerWebExchange;
+import rsocket.interceptor.PayloadExchange;
 
 import java.util.Collections;
 import java.util.Map;
@@ -27,20 +26,20 @@ import java.util.Map;
  * @since 5.2
  */
 public class PayloadAuthorizationContext {
-	private final Payload payload;
+	private final PayloadExchange exchange;
 	private final Map<String, Object> variables;
 
-	public PayloadAuthorizationContext(Payload payload) {
-		this(payload, Collections.emptyMap());
+	public PayloadAuthorizationContext(PayloadExchange exchange) {
+		this(exchange, Collections.emptyMap());
 	}
 
-	public PayloadAuthorizationContext(Payload payload, Map<String, Object> variables) {
-		this.payload = payload;
+	public PayloadAuthorizationContext(PayloadExchange exchange, Map<String, Object> variables) {
+		this.exchange = exchange;
 		this.variables = variables;
 	}
 
-	public Payload getPayload() {
-		return this.payload;
+	public PayloadExchange getExchange() {
+		return this.exchange;
 	}
 
 	public Map<String, Object> getVariables() {

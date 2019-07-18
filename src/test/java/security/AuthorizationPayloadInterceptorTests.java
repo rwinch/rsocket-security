@@ -16,7 +16,6 @@
 
 package security;
 
-import io.rsocket.Payload;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -30,7 +29,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.test.publisher.PublisherProbe;
 import reactor.util.context.Context;
-import rsocket.interceptor.PayloadChain;
+import rsocket.interceptor.PayloadInterceptorChain;
+import rsocket.interceptor.PayloadExchange;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -43,13 +43,13 @@ import static org.springframework.security.authorization.AuthorityReactiveAuthor
 @RunWith(MockitoJUnitRunner.class)
 public class AuthorizationPayloadInterceptorTests {
 	@Mock
-	private ReactiveAuthorizationManager<Payload> authorizationManager;
+	private ReactiveAuthorizationManager<PayloadExchange> authorizationManager;
 
 	@Mock
-	private Payload payload;
+	private PayloadExchange exchange;
 
 	@Mock
-	private PayloadChain chain;
+	private PayloadInterceptorChain chain;
 
 	private PublisherProbe<Void> managerResult = PublisherProbe.empty();
 
@@ -62,7 +62,7 @@ public class AuthorizationPayloadInterceptorTests {
 		AuthorizationPayloadInterceptor interceptor =
 				new AuthorizationPayloadInterceptor(authenticated());
 
-		StepVerifier.create(interceptor.intercept(this.payload, this.chain))
+		StepVerifier.create(interceptor.intercept(this.exchange, this.chain))
 			.then(() -> this.chainResult.assertWasNotSubscribed())
 			.verifyError(AuthenticationCredentialsNotFoundException.class);
 	}
@@ -76,7 +76,7 @@ public class AuthorizationPayloadInterceptorTests {
 		AuthorizationPayloadInterceptor interceptor =
 				new AuthorizationPayloadInterceptor(this.authorizationManager);
 
-		StepVerifier.create(interceptor.intercept(this.payload, this.chain))
+		StepVerifier.create(interceptor.intercept(this.exchange, this.chain))
 				.then(() -> this.chainResult.assertWasSubscribed())
 				.verifyComplete();
 	}
@@ -90,7 +90,7 @@ public class AuthorizationPayloadInterceptorTests {
 		Context userContext = ReactiveSecurityContextHolder
 				.withAuthentication(new TestingAuthenticationToken("user", "password"));
 
-		Mono<Void> intercept = interceptor.intercept(this.payload, this.chain)
+		Mono<Void> intercept = interceptor.intercept(this.exchange, this.chain)
 				.subscriberContext(userContext);
 
 		StepVerifier.create(intercept)
@@ -107,7 +107,7 @@ public class AuthorizationPayloadInterceptorTests {
 		Context userContext = ReactiveSecurityContextHolder
 				.withAuthentication(new TestingAuthenticationToken("user", "password", "ROLE_USER"));
 
-		Mono<Void> intercept = interceptor.intercept(this.payload, this.chain)
+		Mono<Void> intercept = interceptor.intercept(this.exchange, this.chain)
 				.subscriberContext(userContext);
 
 		StepVerifier.create(intercept)

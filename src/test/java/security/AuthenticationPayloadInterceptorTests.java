@@ -33,7 +33,9 @@ import org.springframework.security.core.Authentication;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.test.publisher.PublisherProbe;
-import rsocket.interceptor.PayloadChain;
+import rsocket.interceptor.DefaultPayloadExchange;
+import rsocket.interceptor.PayloadInterceptorChain;
+import rsocket.interceptor.PayloadExchange;
 import rsocket.metadata.SecurityMetadataFlyweight;
 import rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
 
@@ -64,14 +66,14 @@ public class AuthenticationPayloadInterceptorTests {
 	public void interceptWhenBasicCredentialsThenAuthenticates() {
 		AuthenticationPayloadInterceptor interceptor = new AuthenticationPayloadInterceptor(
 				this.authenticationManager);
-		Payload requestPayload = createRequestPayload();
+		PayloadExchange exchange = createExchange();
 		TestingAuthenticationToken expectedAuthentication =
 				new TestingAuthenticationToken("user","password");
 		when(this.authenticationManager.authenticate(any())).thenReturn(Mono.just(
 				expectedAuthentication));
 
-		AuthenticationPayloadChain authenticationPayloadChain = new AuthenticationPayloadChain();
-		interceptor.intercept(requestPayload, authenticationPayloadChain)
+		AuthenticationPayloadInterceptorChain authenticationPayloadChain = new AuthenticationPayloadInterceptorChain();
+		interceptor.intercept(exchange, authenticationPayloadChain)
 			.block();
 
 		Authentication authentication = authenticationPayloadChain.getAuthentication();
@@ -85,18 +87,19 @@ public class AuthenticationPayloadInterceptorTests {
 	public void interceptWhenAuthenticationSuccessThenChainSubscribedOnce() {
 		AuthenticationPayloadInterceptor interceptor = new AuthenticationPayloadInterceptor(
 				this.authenticationManager);
-		Payload requestPayload = createRequestPayload();
+
+		PayloadExchange exchange = createExchange();
 		TestingAuthenticationToken expectedAuthentication =
 				new TestingAuthenticationToken("user","password");
 		when(this.authenticationManager.authenticate(any())).thenReturn(Mono.just(
 				expectedAuthentication));
 
 		PublisherProbe<Void> voidResult = PublisherProbe.empty();
-		PayloadChain chain = mock(PayloadChain.class);
+		PayloadInterceptorChain chain = mock(PayloadInterceptorChain.class);
 		when(chain.next(any())).thenReturn(voidResult.mono());
 
 
-		StepVerifier.create(interceptor.intercept(requestPayload, chain))
+		StepVerifier.create(interceptor.intercept(exchange, chain))
 			.then(() -> assertThat(voidResult.subscribeCount()).isEqualTo(1))
 			.verifyComplete();
 	}
@@ -106,6 +109,10 @@ public class AuthenticationPayloadInterceptorTests {
 		UsernamePassword credentials = new UsernamePassword("user", "password");
 		SecurityMetadataFlyweight.writeBasic(metadata, credentials);
 		return DefaultPayload.create(ByteBufAllocator.DEFAULT.buffer(), metadata);
+	}
+
+	private PayloadExchange createExchange() {
+		return new DefaultPayloadExchange(createRequestPayload(), null, null);
 	}
 
 }

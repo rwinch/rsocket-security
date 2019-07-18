@@ -21,6 +21,8 @@ import io.rsocket.RSocket;
 import io.rsocket.util.RSocketProxy;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
@@ -62,6 +64,9 @@ public class PayloadInterceptorRSocketTests {
 
 	@Mock
 	Payload payload;
+
+	@Captor
+	private ArgumentCaptor<PayloadExchange> exchange;
 
 	PublisherProbe<Void> voidResult = PublisherProbe.empty();
 
@@ -105,7 +110,8 @@ public class PayloadInterceptorRSocketTests {
 			.then(() -> this.voidResult.assertWasSubscribed())
 			.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 	}
 
 	@Test
@@ -121,7 +127,8 @@ public class PayloadInterceptorRSocketTests {
 			.then(() -> this.voidResult.assertWasNotSubscribed())
 			.verifyErrorSatisfies(e -> assertThat(e).isEqualTo(expected));
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 	}
 
 	@Test
@@ -142,7 +149,8 @@ public class PayloadInterceptorRSocketTests {
 
 		interceptor.fireAndForget(this.payload).block();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verify(this.delegate).fireAndForget(this.payload);
 	}
 
@@ -160,7 +168,8 @@ public class PayloadInterceptorRSocketTests {
 			.expectNext(this.payload)
 			.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verify(this.delegate).requestResponse(this.payload);
 	}
 
@@ -175,7 +184,8 @@ public class PayloadInterceptorRSocketTests {
 
 		assertThatCode(() -> interceptor.requestResponse(this.payload).block()).isEqualTo(expected);
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verifyZeroInteractions(this.delegate);
 	}
 
@@ -201,7 +211,8 @@ public class PayloadInterceptorRSocketTests {
 				.expectNext(this.payload)
 				.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verify(this.delegate).requestResponse(this.payload);
 	}
 
@@ -219,7 +230,8 @@ public class PayloadInterceptorRSocketTests {
 				.expectNext(this.payload)
 				.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 	}
 
 	@Test
@@ -235,7 +247,8 @@ public class PayloadInterceptorRSocketTests {
 			.then(() -> this.payloadResult.assertNoSubscribers())
 			.verifyErrorSatisfies(e -> assertThat(e).isEqualTo(expected));
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 	}
 
 	@Test
@@ -260,7 +273,8 @@ public class PayloadInterceptorRSocketTests {
 				.expectNext(this.payload)
 				.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verify(this.delegate).requestStream(this.payload);
 	}
 
@@ -278,7 +292,8 @@ public class PayloadInterceptorRSocketTests {
 				.expectNext(this.payload)
 				.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verify(this.delegate).requestChannel(any());
 	}
 
@@ -298,7 +313,8 @@ public class PayloadInterceptorRSocketTests {
 			.then(() -> this.payloadResult.assertNoSubscribers())
 			.verifyErrorSatisfies(e -> assertThat(e).isEqualTo(expected));
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 	}
 
 	@Test
@@ -324,7 +340,8 @@ public class PayloadInterceptorRSocketTests {
 				.expectNext(this.payload)
 				.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verify(this.delegate).requestChannel(payload);
 	}
 
@@ -340,7 +357,8 @@ public class PayloadInterceptorRSocketTests {
 			.then(() -> this.voidResult.assertWasSubscribed())
 			.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 	}
 
 	@Test
@@ -356,7 +374,8 @@ public class PayloadInterceptorRSocketTests {
 			.then(() -> this.voidResult.assertWasNotSubscribed())
 			.verifyErrorSatisfies(e -> assertThat(e).isEqualTo(expected));
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 	}
 
 	@Test
@@ -378,7 +397,8 @@ public class PayloadInterceptorRSocketTests {
 		StepVerifier.create(interceptor.metadataPush(this.payload))
 				.verifyComplete();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verify(this.delegate).metadataPush(this.payload);
 		this.voidResult.assertWasSubscribed();
 	}
@@ -396,7 +416,8 @@ public class PayloadInterceptorRSocketTests {
 
 		interceptor.fireAndForget(this.payload).block();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		this.voidResult.assertWasSubscribed();
 	}
 
@@ -412,8 +433,9 @@ public class PayloadInterceptorRSocketTests {
 
 		interceptor.fireAndForget(this.payload).block();
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
-		verify(this.interceptor2).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
+		verify(this.interceptor2).intercept(any(), any());
 		verify(this.delegate).fireAndForget(eq(this.payload));
 		this.voidResult.assertWasSubscribed();
 	}
@@ -430,7 +452,8 @@ public class PayloadInterceptorRSocketTests {
 
 		assertThatCode(() -> interceptor.fireAndForget(this.payload).block()).isEqualTo(expected);
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
 		verifyZeroInteractions(this.interceptor2);
 		this.voidResult.assertWasNotSubscribed();
 	}
@@ -447,8 +470,9 @@ public class PayloadInterceptorRSocketTests {
 
 		assertThatCode(() -> interceptor.fireAndForget(this.payload).block()).isEqualTo(expected);
 
-		verify(this.interceptor).intercept(eq(this.payload), any());
-		verify(this.interceptor2).intercept(eq(this.payload), any());
+		verify(this.interceptor).intercept(this.exchange.capture(), any());
+		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
+		verify(this.interceptor2).intercept(any(), any());
 		this.voidResult.assertWasNotSubscribed();
 	}
 
@@ -460,17 +484,17 @@ public class PayloadInterceptorRSocketTests {
 
 	private Answer<Object> withAuthenticated(Authentication authentication) {
 		return invocation -> {
-			PayloadChain c = (PayloadChain) invocation.getArguments()[1];
-			return c.next(this.payload)
+			PayloadInterceptorChain c = (PayloadInterceptorChain) invocation.getArguments()[1];
+			return c.next(new DefaultPayloadExchange(this.payload, null, null))
 					.subscriberContext(ReactiveSecurityContextHolder.withAuthentication(authentication));
 		};
 	}
 
 	private static Answer<Mono<Void>> withChainNext() {
 		return invocation -> {
-			Payload p = (Payload) invocation.getArguments()[0];
-			PayloadChain c = (PayloadChain) invocation.getArguments()[1];
-			return c.next(p);
+			PayloadExchange exchange = (PayloadExchange) invocation.getArguments()[0];
+			PayloadInterceptorChain chain = (PayloadInterceptorChain) invocation.getArguments()[1];
+			return chain.next(exchange);
 		};
 	}
 }
