@@ -24,10 +24,10 @@ import org.springframework.security.authentication.UserDetailsRepositoryReactive
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import rsocket.interceptor.PayloadInterceptor;
-import rsocket.interceptor.PayloadRSocketInterceptor;
-import security.AuthenticationPayloadInterceptor;
-import security.AuthorizationPayloadInterceptor;
+import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
+import org.springframework.security.rsocket.interceptor.PayloadRSocketInterceptor;
+import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
+import org.springframework.security.rsocket.interceptor.authorization.AuthorizationPayloadInterceptor;
 
 import java.util.Arrays;
 import java.util.List;

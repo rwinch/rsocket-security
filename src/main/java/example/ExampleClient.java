@@ -28,8 +28,8 @@ import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.util.ByteBufPayload;
 import reactor.core.publisher.Mono;
-import rsocket.metadata.SecurityMetadataFlyweight;
-import rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
+import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight;
+import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
 
 /**
  * @author Rob Winch
