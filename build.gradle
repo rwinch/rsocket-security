@@ -16,7 +16,11 @@
 
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '2.2.0.BUILD-SNAPSHOT'
 }
+
+apply plugin: 'io.spring.dependency-management'
+
 
 group 'example'
 version '1.0-SNAPSHOT'
@@ -29,10 +33,11 @@ repositories {
     maven { url "https://oss.jfrog.org/artifactory/libs-snapshot" } // RSocket
 }
 
+
 dependencies {
-//    implementation platform('org.springframework.boot:spring-boot-dependencies:2.2.0.BUILD-SNAPSHOT')
     implementation 'org.springframework.boot:spring-boot-starter-security:2.2.0.BUILD-SNAPSHOT'
     implementation 'io.rsocket:rsocket-core:0.12.2-RC4-SNAPSHOT'
+    implementation 'org.springframework:spring-messaging'
     implementation 'io.rsocket:rsocket-transport-netty:0.12.2-RC4-SNAPSHOT'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.11.1'
