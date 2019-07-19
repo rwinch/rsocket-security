@@ -32,7 +32,7 @@ import java.util.List;
  * @author Rob Winch
  */
 public class PayloadInterceptorRSocket extends RSocketProxy implements ResponderRSocket {
-	// FIXME: This needs to be passed in as an argument PayloadExchange
+	// FIXME: This needs to be obtained from the connection. See https://github.com/rsocket/rsocket-java/issues/661
 	private static final MimeType COMPOSITE_METADATA = new MimeType("message", "x.rsocket.composite-metadata.v0");
 
 	private final List<PayloadInterceptor> interceptors;
