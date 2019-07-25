@@ -16,7 +16,8 @@
 
 package org.springframework.security.rsocket.util;
 
-import org.springframework.messaging.rsocket.annotation.support.MetadataExtractor;
+import org.springframework.messaging.rsocket.MetadataExtractor;
+import org.springframework.messaging.rsocket.RSocketStrategies;
 import org.springframework.util.Assert;
 import org.springframework.util.RouteMatcher;
 import reactor.core.publisher.Mono;
@@ -37,12 +38,15 @@ public class RoutePayloadExchangeMatcher implements PayloadExchangeMatcher {
 
 	private final MetadataExtractor metadataExtractor;
 
+	private final RSocketStrategies rsocketStrategies;
+
 	private final RouteMatcher routeMatcher;
 
-	public RoutePayloadExchangeMatcher(MetadataExtractor metadataExtractor,
+	public RoutePayloadExchangeMatcher(MetadataExtractor metadataExtractor, RSocketStrategies rsocketStrategies,
 			RouteMatcher routeMatcher, String pattern) {
 		Assert.notNull(pattern, "pattern cannot be null");
 		this.metadataExtractor = metadataExtractor;
+		this.rsocketStrategies = rsocketStrategies;
 		this.routeMatcher = routeMatcher;
 		this.pattern = pattern;
 	}
@@ -50,7 +54,8 @@ public class RoutePayloadExchangeMatcher implements PayloadExchangeMatcher {
 	@Override
 	public Mono<MatchResult> matches(PayloadExchange exchange) {
 		Map<String, Object> metadata = this.metadataExtractor
-				.extract(exchange.getPayload(), exchange.getMetadataMimeType());
+				.extract(exchange.getPayload(), exchange.getMetadataMimeType(),
+						this.rsocketStrategies);
 		return Optional.ofNullable((String) metadata.get(MetadataExtractor.ROUTE_KEY))
 			.map(routeValue -> this.routeMatcher.parseRoute(routeValue))
 			.map(route -> this.routeMatcher.matchAndExtract(this.pattern, route))
