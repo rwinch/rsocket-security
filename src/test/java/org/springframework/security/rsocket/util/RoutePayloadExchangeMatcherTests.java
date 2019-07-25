@@ -22,7 +22,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.messaging.rsocket.annotation.support.MetadataExtractor;
+import org.springframework.messaging.rsocket.MetadataExtractor;
+import org.springframework.messaging.rsocket.RSocketStrategies;
 import org.springframework.util.MimeType;
 import org.springframework.util.RouteMatcher;
 import org.springframework.security.rsocket.interceptor.DefaultPayloadExchange;
@@ -49,6 +50,9 @@ public class RoutePayloadExchangeMatcherTests {
 	@Mock
 	private RouteMatcher routeMatcher;
 
+	@Mock
+	private RSocketStrategies rsocketStrategies;
+
 	private PayloadExchange exchange;
 
 	@Mock
@@ -64,13 +68,13 @@ public class RoutePayloadExchangeMatcherTests {
 	@Before
 	public void setup() {
 		this.pattern = "a.b";
-		this.matcher = new RoutePayloadExchangeMatcher(this.metadataExtractor, this.routeMatcher, this.pattern);
+		this.matcher = new RoutePayloadExchangeMatcher(this.metadataExtractor, this.rsocketStrategies, this.routeMatcher, this.pattern);
 		this.exchange = new DefaultPayloadExchange(this.payload, COMPOSITE_METADATA, null);
 	}
 
 	@Test
 	public void matchesWhenNoRouteThenNotMatch() {
-		when(this.metadataExtractor.extract(any(), any()))
+		when(this.metadataExtractor.extract(any(), any(), any()))
 				.thenReturn(Collections.emptyMap());
 		PayloadExchangeMatcher.MatchResult result = this.matcher.matches(this.exchange).block();
 		assertThat(result.isMatch()).isFalse();
@@ -79,7 +83,7 @@ public class RoutePayloadExchangeMatcherTests {
 	@Test
 	public void matchesWhenNotMatchThenNotMatch() {
 		String route = "route";
-		when(this.metadataExtractor.extract(any(), any()))
+		when(this.metadataExtractor.extract(any(), any(), any()))
 				.thenReturn(Collections.singletonMap(MetadataExtractor.ROUTE_KEY, route));
 		PayloadExchangeMatcher.MatchResult result = this.matcher.matches(this.exchange).block();
 		assertThat(result.isMatch()).isFalse();
@@ -88,7 +92,7 @@ public class RoutePayloadExchangeMatcherTests {
 	@Test
 	public void matchesWhenMatchAndNoVariablesThenMatch() {
 		String route = "route";
-		when(this.metadataExtractor.extract(any(), any()))
+		when(this.metadataExtractor.extract(any(), any(), any()))
 				.thenReturn(Collections.singletonMap(MetadataExtractor.ROUTE_KEY, route));
 		when(this.routeMatcher.parseRoute(any())).thenReturn(this.route);
 		when(this.routeMatcher.matchAndExtract(any(), any())).thenReturn(Collections.emptyMap());
@@ -100,7 +104,7 @@ public class RoutePayloadExchangeMatcherTests {
 	public void matchesWhenMatchAndVariablesThenMatchAndVariables() {
 		String route = "route";
 		Map<String, String> variables = Collections.singletonMap("a", "b");
-		when(this.metadataExtractor.extract(any(), any()))
+		when(this.metadataExtractor.extract(any(), any(), any()))
 				.thenReturn(Collections.singletonMap(MetadataExtractor.ROUTE_KEY, route));
 		when(this.routeMatcher.parseRoute(any())).thenReturn(this.route);
 		when(this.routeMatcher.matchAndExtract(any(), any())).thenReturn(variables);
