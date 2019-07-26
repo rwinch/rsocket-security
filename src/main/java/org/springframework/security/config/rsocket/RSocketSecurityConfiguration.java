@@ -14,21 +14,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 /**
  * @author Rob Winch
  */
-@Configuration
-class RSocketSecurityConfiguration {
+@Configuration(proxyBeanMethods = false)
+public class RSocketSecurityConfiguration {
 	private ReactiveAuthenticationManager authenticationManager;
 
 	private ReactiveUserDetailsService reactiveUserDetailsService;
 
 	private PasswordEncoder passwordEncoder;
 
-	@Autowired
+	@Autowired(required = false)
 	void setAuthenticationManager(
 			ReactiveAuthenticationManager authenticationManager) {
 		this.authenticationManager = authenticationManager;
 	}
 
-	@Autowired
+	@Autowired(required = false)
 	void setUserDetailsService(ReactiveUserDetailsService userDetailsService) {
 		this.reactiveUserDetailsService = userDetailsService;
 	}
