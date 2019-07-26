@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.messaging.rsocket.MetadataExtractor;
 import org.springframework.messaging.rsocket.RSocketStrategies;
+import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authorization.AuthenticatedReactiveAuthorizationManager;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -81,9 +82,11 @@ public class RSocketSecurity {
 		}
 
 		public Access route(String pattern) {
+			RSocketMessageHandler handler = getBean(RSocketMessageHandler.class);
 			PayloadExchangeMatcher matcher = new RoutePayloadExchangeMatcher(
-					getBean(MetadataExtractor.class), getBean(RSocketStrategies.class),
-					getBean(RouteMatcher.class), pattern);
+					handler.getMetadataExtractor(),
+					handler.getRouteMatcher(),
+					pattern);
 			return matcher(matcher);
 		}
 
