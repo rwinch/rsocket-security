@@ -15,7 +15,7 @@ import org.springframework.security.rsocket.interceptor.authentication.Anonymous
 import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.authorization.AuthorizationPayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.authorization.PayloadExchangeMatcherReactiveAuthorizationManager;
-import org.springframework.security.rsocket.util.PayloadAuthorizationContext;
+import org.springframework.security.rsocket.util.PayloadExchangeAuthorizationContext;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcher;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcherEntry;
 import org.springframework.security.rsocket.util.RoutePayloadExchangeMatcher;
@@ -109,7 +109,7 @@ public class RSocketSecurity {
 			}
 
 			public AuthorizePayloadsSpec access(
-					ReactiveAuthorizationManager<PayloadAuthorizationContext> authorization) {
+					ReactiveAuthorizationManager<PayloadExchangeAuthorizationContext> authorization) {
 				AuthorizePayloadsSpec.this.authzBuilder.add(new PayloadExchangeMatcherEntry<>(this.matcher, authorization));
 				return AuthorizePayloadsSpec.this;
 			}

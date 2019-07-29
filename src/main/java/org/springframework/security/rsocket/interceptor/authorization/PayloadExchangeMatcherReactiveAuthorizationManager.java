@@ -22,7 +22,7 @@ import org.springframework.security.core.Authentication;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
-import org.springframework.security.rsocket.util.PayloadAuthorizationContext;
+import org.springframework.security.rsocket.util.PayloadExchangeAuthorizationContext;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcher;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcherEntry;
 
@@ -33,9 +33,9 @@ import java.util.List;
  * @author Rob Winch
  */
 public class PayloadExchangeMatcherReactiveAuthorizationManager implements ReactiveAuthorizationManager<PayloadExchange> {
-	private final List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings;
+	private final List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadExchangeAuthorizationContext>>> mappings;
 
-	private PayloadExchangeMatcherReactiveAuthorizationManager(List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings) {
+	private PayloadExchangeMatcherReactiveAuthorizationManager(List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadExchangeAuthorizationContext>>> mappings) {
 		this.mappings = mappings;
 	}
 
@@ -46,7 +46,7 @@ public class PayloadExchangeMatcherReactiveAuthorizationManager implements React
 						.filter(PayloadExchangeMatcher.MatchResult::isMatch)
 						.map(r -> r.getVariables())
 						.flatMap(variables -> mapping.getEntry()
-								.check(authentication, new PayloadAuthorizationContext(exchange, variables))
+								.check(authentication, new PayloadExchangeAuthorizationContext(exchange, variables))
 						)
 				)
 				.next()
@@ -58,13 +58,13 @@ public class PayloadExchangeMatcherReactiveAuthorizationManager implements React
 	}
 
 	public static class Builder {
-		private final List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings = new ArrayList<>();
+		private final List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadExchangeAuthorizationContext>>> mappings = new ArrayList<>();
 
 		private Builder() {
 		}
 
 		public PayloadExchangeMatcherReactiveAuthorizationManager.Builder add(
-				PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>> entry) {
+				PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadExchangeAuthorizationContext>> entry) {
 			this.mappings.add(entry);
 			return this;
 		}

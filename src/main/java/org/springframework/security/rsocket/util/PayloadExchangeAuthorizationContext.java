@@ -25,15 +25,15 @@ import java.util.Map;
  * @author Rob Winch
  * @since 5.2
  */
-public class PayloadAuthorizationContext {
+public class PayloadExchangeAuthorizationContext {
 	private final PayloadExchange exchange;
 	private final Map<String, Object> variables;
 
-	public PayloadAuthorizationContext(PayloadExchange exchange) {
+	public PayloadExchangeAuthorizationContext(PayloadExchange exchange) {
 		this(exchange, Collections.emptyMap());
 	}
 
-	public PayloadAuthorizationContext(PayloadExchange exchange, Map<String, Object> variables) {
+	public PayloadExchangeAuthorizationContext(PayloadExchange exchange, Map<String, Object> variables) {
 		this.exchange = exchange;
 		this.variables = variables;
 	}
