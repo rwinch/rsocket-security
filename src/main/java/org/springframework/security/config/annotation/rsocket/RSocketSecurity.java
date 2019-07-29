@@ -1,10 +1,8 @@
-package org.springframework.security.config.rsocket;
+package org.springframework.security.config.annotation.rsocket;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ResolvableType;
-import org.springframework.messaging.rsocket.MetadataExtractor;
-import org.springframework.messaging.rsocket.RSocketStrategies;
 import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authorization.AuthenticatedReactiveAuthorizationManager;
@@ -21,7 +19,6 @@ import org.springframework.security.rsocket.util.PayloadAuthorizationContext;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcher;
 import org.springframework.security.rsocket.util.PayloadMatcherEntry;
 import org.springframework.security.rsocket.util.RoutePayloadExchangeMatcher;
-import org.springframework.util.RouteMatcher;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;

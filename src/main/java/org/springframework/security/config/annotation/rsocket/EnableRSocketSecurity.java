@@ -1,4 +1,4 @@
-package org.springframework.security.config.rsocket;
+package org.springframework.security.config.annotation.rsocket;
 
 import org.springframework.context.annotation.Import;
 
