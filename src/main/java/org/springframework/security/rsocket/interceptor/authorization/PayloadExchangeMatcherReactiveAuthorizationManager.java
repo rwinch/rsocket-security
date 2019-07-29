@@ -32,10 +32,10 @@ import java.util.List;
 /**
  * @author Rob Winch
  */
-public class PayloadMatcherReactiveAuthorizationManager implements ReactiveAuthorizationManager<PayloadExchange> {
+public class PayloadExchangeMatcherReactiveAuthorizationManager implements ReactiveAuthorizationManager<PayloadExchange> {
 	private final List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings;
 
-	private PayloadMatcherReactiveAuthorizationManager(List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings) {
+	private PayloadExchangeMatcherReactiveAuthorizationManager(List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings) {
 		this.mappings = mappings;
 	}
 
@@ -53,8 +53,8 @@ public class PayloadMatcherReactiveAuthorizationManager implements ReactiveAutho
 				.switchIfEmpty(Mono.fromCallable(() -> new AuthorizationDecision(false)));
 	}
 
-	public static PayloadMatcherReactiveAuthorizationManager.Builder builder() {
-		return new PayloadMatcherReactiveAuthorizationManager.Builder();
+	public static PayloadExchangeMatcherReactiveAuthorizationManager.Builder builder() {
+		return new PayloadExchangeMatcherReactiveAuthorizationManager.Builder();
 	}
 
 	public static class Builder {
@@ -63,13 +63,13 @@ public class PayloadMatcherReactiveAuthorizationManager implements ReactiveAutho
 		private Builder() {
 		}
 
-		public PayloadMatcherReactiveAuthorizationManager.Builder add(PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>> entry) {
+		public PayloadExchangeMatcherReactiveAuthorizationManager.Builder add(PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>> entry) {
 			this.mappings.add(entry);
 			return this;
 		}
 
-		public PayloadMatcherReactiveAuthorizationManager build() {
-			return new PayloadMatcherReactiveAuthorizationManager(this.mappings);
+		public PayloadExchangeMatcherReactiveAuthorizationManager build() {
+			return new PayloadExchangeMatcherReactiveAuthorizationManager(this.mappings);
 		}
 	}
 }
