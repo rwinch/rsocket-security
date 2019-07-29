@@ -19,11 +19,11 @@ package org.springframework.security.rsocket.util;
 /**
  * @author Rob Winch
  */
-public class PayloadMatcherEntry<T> {
+public class PayloadExchangeMatcherEntry<T> {
 	private final PayloadExchangeMatcher matcher;
 	private final T entry;
 
-	public PayloadMatcherEntry(PayloadExchangeMatcher matcher, T entry) {
+	public PayloadExchangeMatcherEntry(PayloadExchangeMatcher matcher, T entry) {
 		this.matcher = matcher;
 		this.entry = entry;
 	}

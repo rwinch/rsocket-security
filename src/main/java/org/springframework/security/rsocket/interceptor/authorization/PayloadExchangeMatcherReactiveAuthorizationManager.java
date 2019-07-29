@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
 import org.springframework.security.rsocket.util.PayloadAuthorizationContext;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcher;
-import org.springframework.security.rsocket.util.PayloadMatcherEntry;
+import org.springframework.security.rsocket.util.PayloadExchangeMatcherEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +33,9 @@ import java.util.List;
  * @author Rob Winch
  */
 public class PayloadExchangeMatcherReactiveAuthorizationManager implements ReactiveAuthorizationManager<PayloadExchange> {
-	private final List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings;
+	private final List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings;
 
-	private PayloadExchangeMatcherReactiveAuthorizationManager(List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings) {
+	private PayloadExchangeMatcherReactiveAuthorizationManager(List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings) {
 		this.mappings = mappings;
 	}
 
@@ -58,12 +58,13 @@ public class PayloadExchangeMatcherReactiveAuthorizationManager implements React
 	}
 
 	public static class Builder {
-		private final List<PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings = new ArrayList<>();
+		private final List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>>> mappings = new ArrayList<>();
 
 		private Builder() {
 		}
 
-		public PayloadExchangeMatcherReactiveAuthorizationManager.Builder add(PayloadMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>> entry) {
+		public PayloadExchangeMatcherReactiveAuthorizationManager.Builder add(
+				PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadAuthorizationContext>> entry) {
 			this.mappings.add(entry);
 			return this;
 		}
