@@ -25,7 +25,7 @@ import org.springframework.security.core.userdetails.MapReactiveUserDetailsServi
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
-import org.springframework.security.rsocket.interceptor.PayloadRSocketInterceptor;
+import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.authorization.AuthorizationPayloadInterceptor;
 
@@ -58,7 +58,7 @@ public class ExampleServer {
 		RSocketFactory.receive()
 				// Enable Zero Copy
 				.frameDecoder(PayloadDecoder.ZERO_COPY)
-				.addResponderPlugin(new PayloadRSocketInterceptor(payloadInterceptors))
+				.addSocketAcceptorPlugin(new PayloadSocketAcceptorInterceptor(payloadInterceptors))
 				.acceptor(helloHandler)
 				.transport(TcpServerTransport.create(7878))
 				.start()

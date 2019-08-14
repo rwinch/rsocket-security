@@ -10,7 +10,7 @@ import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
-import org.springframework.security.rsocket.interceptor.PayloadRSocketInterceptor;
+import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.interceptor.authentication.AnonymousPayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.authorization.AuthorizationPayloadInterceptor;
@@ -44,7 +44,11 @@ public class RSocketSecurity {
 		return this;
 	}
 
-	public PayloadRSocketInterceptor build() {
+	public PayloadSocketAcceptorInterceptor build() {
+		return new PayloadSocketAcceptorInterceptor(payloadInterceptors());
+	}
+
+	private List<PayloadInterceptor> payloadInterceptors() {
 		List<PayloadInterceptor> payloadInterceptors = new ArrayList<>();
 
 		payloadInterceptors.add(new AuthenticationPayloadInterceptor(this.authenticationManager));
@@ -53,7 +57,7 @@ public class RSocketSecurity {
 		if (this.authorizePayload != null) {
 			payloadInterceptors.add(this.authorizePayload.build());
 		}
-		return new PayloadRSocketInterceptor(payloadInterceptors);
+		return payloadInterceptors;
 	}
 
 	public RSocketSecurity authenticationManager(ReactiveAuthenticationManager authenticationManager) {

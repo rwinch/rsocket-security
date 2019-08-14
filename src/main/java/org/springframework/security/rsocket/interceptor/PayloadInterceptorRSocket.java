@@ -31,14 +31,20 @@ import java.util.List;
 /**
  * @author Rob Winch
  */
+// FIXME: Consider making package scope (aligns with Spring support and allows injecting additional/different values)
 public class PayloadInterceptorRSocket extends RSocketProxy implements ResponderRSocket {
-	// FIXME: This needs to be obtained from the connection. See https://github.com/rsocket/rsocket-java/issues/661
-	private static final MimeType COMPOSITE_METADATA = new MimeType("message", "x.rsocket.composite-metadata.v0");
-
 	private final List<PayloadInterceptor> interceptors;
 
-	public PayloadInterceptorRSocket(RSocket delegate, List<PayloadInterceptor> interceptors) {
+	private final MimeType metadataMimeType;
+
+	private final MimeType dataMimeType;
+
+	public PayloadInterceptorRSocket(RSocket delegate,
+			List<PayloadInterceptor> interceptors, MimeType metadataMimeType,
+			MimeType dataMimeType) {
 		super(delegate);
+		this.metadataMimeType = metadataMimeType;
+		this.dataMimeType = dataMimeType;
 		if (delegate == null) {
 			throw new IllegalArgumentException("delegate cannot be null");
 		}
@@ -101,8 +107,9 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 	private Mono<Context> intercept(Payload payload) {
 		return Mono.defer(() -> {
 			ContextPayloadInterceptorChain chain = new ContextPayloadInterceptorChain(this.interceptors);
-			// FIXME: We need to obtain the MimeTypes with hooks from
-			return chain.next(new DefaultPayloadExchange(payload, COMPOSITE_METADATA, null))
+			DefaultPayloadExchange exchange = new DefaultPayloadExchange(payload,
+					this.metadataMimeType, this.dataMimeType);
+			return chain.next(exchange)
 				.then(Mono.fromCallable(() -> chain.getContext()))
 				.defaultIfEmpty(Context.empty());
 		});
