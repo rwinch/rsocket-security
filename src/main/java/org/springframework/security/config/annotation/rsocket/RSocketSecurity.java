@@ -40,12 +40,7 @@ public class RSocketSecurity {
 		if (this.authorizePayload == null) {
 			this.authorizePayload = new AuthorizePayloadsSpec();
 		}
-		try {
-			authorize.customize(this.authorizePayload);
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		authorize.customize(this.authorizePayload);
 		return this;
 	}
 
