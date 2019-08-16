@@ -45,7 +45,12 @@ public class RSocketSecurity {
 	}
 
 	public PayloadSocketAcceptorInterceptor build() {
-		return new PayloadSocketAcceptorInterceptor(payloadInterceptors());
+		PayloadSocketAcceptorInterceptor interceptor = new PayloadSocketAcceptorInterceptor(
+				payloadInterceptors());
+		RSocketMessageHandler handler = getBean(RSocketMessageHandler.class);
+		interceptor.setDefaultDataMimeType(handler.getDefaultDataMimeType());
+		interceptor.setDefaultMetadataMimeType(handler.getDefaultMetadataMimeType());
+		return interceptor;
 	}
 
 	private List<PayloadInterceptor> payloadInterceptors() {
