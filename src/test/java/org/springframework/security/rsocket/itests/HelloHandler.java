@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package example;
+package org.springframework.security.rsocket.itests;
 
 import io.rsocket.AbstractRSocket;
 import io.rsocket.ConnectionSetupPayload;

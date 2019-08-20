@@ -19,6 +19,7 @@ package org.springframework.security.rsocket.interceptor;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.ResponderRSocket;
+import io.rsocket.frame.FrameType;
 import io.rsocket.util.RSocketProxy;
 import org.reactivestreams.Publisher;
 import org.springframework.util.MimeType;
@@ -86,13 +87,20 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
-		return Flux.from(payloads)
-			.flatMap(p -> intercept(p)
-				.flatMapMany(context -> this.source
-					.requestChannel(payloads)
-					.subscriberContext(context)
-				)
-			);
+		Flux<Payload> share = Flux.from(payloads).share();
+		return Flux.from(share)
+			.switchOnFirst((signal, innerFlux) -> {
+				Payload firstPayload = signal.get();
+				return firstPayload == null ?
+						innerFlux :
+						intercept(firstPayload)
+							.flatMapMany(context -> {
+								Flux<Payload> merged = Flux
+									.merge(Mono.just(firstPayload), innerFlux);
+								return this.source.requestChannel(merged)
+									.subscriberContext(context);
+							});
+			});
 	}
 
 	@Override

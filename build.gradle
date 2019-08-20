@@ -42,6 +42,7 @@ dependencies {
     implementation 'io.rsocket:rsocket-transport-netty:1.0.0-RC3-SNAPSHOT'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.11.1'
+    testCompile 'org.springframework:spring-test'
     testCompile 'io.projectreactor:reactor-test:3.2.9.RELEASE'
     testCompile 'org.mockito:mockito-all:1.8.4'
 }

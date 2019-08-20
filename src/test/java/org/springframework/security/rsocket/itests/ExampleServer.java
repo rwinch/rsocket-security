@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package example;
+package org.springframework.security.rsocket.itests;
 
 import io.rsocket.RSocketFactory;
 import io.rsocket.frame.decoder.PayloadDecoder;
@@ -38,7 +38,7 @@ import static org.springframework.security.authorization.AuthorityReactiveAuthor
  * @author Rob Winch
  */
 public class ExampleServer {
-	public static void main(String[] args) {
+	public static void start() {
 		UserDetails rob = User.withDefaultPasswordEncoder()
 			.username("rob")
 			.password("password")
