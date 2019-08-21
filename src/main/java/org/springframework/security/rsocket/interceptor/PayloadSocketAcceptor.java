@@ -45,6 +45,7 @@ public class PayloadSocketAcceptor implements SocketAcceptor {
 
 		MimeType metadataMimeType = parseMimeType(setup.metadataMimeType(), this.defaultMetadataMimeType);
 		Assert.notNull(metadataMimeType, "No `metadataMimeType` in ConnectionSetupPayload and no default value");
+		// FIXME do we want to make the sendingSocket available in the PayloadExchange
 		return this.delegate.accept(setup, sendingSocket)
 			.map(acceptingSocket -> new PayloadInterceptorRSocket(acceptingSocket, this.interceptors, metadataMimeType, dataMimeType));
 	}
