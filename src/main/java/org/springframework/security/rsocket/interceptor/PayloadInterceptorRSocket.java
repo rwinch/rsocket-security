@@ -92,7 +92,11 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 				Payload firstPayload = signal.get();
 				return intercept(firstPayload)
 					.flatMapMany(context ->
-						this.source.requestChannel(innerFlux)
+						innerFlux
+							.skip(1)
+							.flatMap(p -> intercept(p).thenReturn(p))
+							.transform(securedPayloads -> Flux.concat(Flux.just(firstPayload), securedPayloads))
+							.transform(securedPayloads -> this.source.requestChannel(securedPayloads))
 							.subscriberContext(context)
 					);
 			});
