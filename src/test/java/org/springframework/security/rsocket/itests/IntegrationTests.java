@@ -107,6 +107,12 @@ public class IntegrationTests {
 
 	}
 
+	@Test
+	public void send() {
+		this.requester.rsocket().fireAndForget();
+
+	}
+
 	@Configuration
 	@EnableRSocketSecurity
 	static class Config {
@@ -167,6 +173,11 @@ public class IntegrationTests {
 		@MessageMapping({"secure.hello", "hello"})
 		Flux<String> hi(Flux<String> payload) {
 			return payload.map(p -> "hello " + p);
+		}
+
+		@MessageMapping({"secure.send", "send"})
+		Mono<Void> send(Flux<String> payload) {
+			return Mono.empty();
 		}
 	}
 
