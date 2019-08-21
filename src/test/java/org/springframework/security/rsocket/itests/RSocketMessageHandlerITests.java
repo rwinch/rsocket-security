@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
  */
 @ContextConfiguration
 @RunWith(SpringRunner.class)
-public class IntegrationTests {
+public class RSocketMessageHandlerITests {
 	@Autowired
 	RSocketMessageHandler handler;
 
@@ -89,16 +89,17 @@ public class IntegrationTests {
 	}
 
 	@Test
-	public void retrieveFlux() {
+	public void retrieveFluxWhenDataFlux() {
+		Flux<String> data = Flux.just("a", "b", "c");
 		assertThatCode(() -> this.requester.route("secure.hello")
-				.data(Flux.just("a", "b", "c"), String.class)
+				.data(data, String.class)
 				.retrieveFlux(String.class)
 				.collectList()
 				.block()).isInstanceOf(
 				ApplicationErrorException.class);
 
 		List<String> hi = this.requester.route("hello")
-				.data(Flux.just("a", "b", "c"), String.class)
+				.data(data, String.class)
 				.retrieveFlux(String.class)
 				.collectList()
 				.block();
@@ -108,8 +109,37 @@ public class IntegrationTests {
 	}
 
 	@Test
+	public void retrieveFluxWhenDataString() {
+		String data = "a";
+		assertThatCode(() -> this.requester.route("secure.hello")
+				.data(data)
+				.retrieveFlux(String.class)
+				.collectList()
+				.block()).isInstanceOf(
+				ApplicationErrorException.class);
+
+		List<String> hi = this.requester.route("hello")
+				.data(data)
+				.retrieveFlux(String.class)
+				.collectList()
+				.block();
+
+		assertThat(hi).isEqualTo("hello a");
+
+	}
+
+	@Test
 	public void send() {
-		this.requester.rsocket().fireAndForget();
+//		assertThatCode(() -> this.requester.route("secure.send")
+//				.data("hi")
+//				.send()
+//				.block())
+//				.isInstanceOf(ApplicationErrorException.class);
+
+		this.requester.route("send")
+				.data("hi")
+				.send()
+				.block();
 
 	}
 
