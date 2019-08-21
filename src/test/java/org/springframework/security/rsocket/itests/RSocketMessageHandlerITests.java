@@ -124,7 +124,7 @@ public class RSocketMessageHandlerITests {
 				.collectList()
 				.block();
 
-		assertThat(hi).isEqualTo("hello a");
+		assertThat(hi).contains("hello a");
 
 	}
 
