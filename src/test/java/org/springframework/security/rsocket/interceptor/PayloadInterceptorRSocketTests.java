@@ -350,7 +350,7 @@ public class PayloadInterceptorRSocketTests {
 
 		verify(this.interceptor).intercept(this.exchange.capture(), any());
 		assertThat(this.exchange.getValue().getPayload()).isEqualTo(this.payload);
-		verify(this.delegate).requestChannel(payload);
+		verify(this.delegate).requestChannel(any());
 	}
 
 	@Test

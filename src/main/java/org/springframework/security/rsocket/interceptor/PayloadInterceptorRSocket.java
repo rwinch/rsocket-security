@@ -87,11 +87,14 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
-		Flux<Payload> share = Flux.from(payloads).share();
-		return Flux.from(share)
+		return Flux.from(payloads)
 			.switchOnFirst((signal, innerFlux) -> {
 				Payload firstPayload = signal.get();
-				return this.source.requestChannel(Flux.merge(Mono.justOrEmpty(firstPayload), innerFlux));
+				return intercept(firstPayload)
+					.flatMapMany(context ->
+						this.source.requestChannel(innerFlux)
+							.subscriberContext(context)
+					);
 			});
 	}
 

@@ -90,20 +90,20 @@ public class IntegrationTests {
 
 	@Test
 	public void retrieveFlux() {
+		assertThatCode(() -> this.requester.route("secure.hello")
+				.data(Flux.just("a", "b", "c"), String.class)
+				.retrieveFlux(String.class)
+				.collectList()
+				.block()).isInstanceOf(
+				ApplicationErrorException.class);
+
 		List<String> hi = this.requester.route("hello")
-				.data(Flux.just("a"), String.class)
+				.data(Flux.just("a", "b", "c"), String.class)
 				.retrieveFlux(String.class)
 				.collectList()
 				.block();
 
-		assertThat(hi).contains("hello a");
-
-//		assertThatCode(() -> this.requester.route("hello")
-//				.data(Flux.just("a", "b", "c"), String.class)
-//				.retrieveFlux(String.class)
-//				.collectList()
-//				.block()).isInstanceOf(
-//				ApplicationErrorException.class);
+		assertThat(hi).contains("hello a", "hello b", "hello c");
 
 	}
 
