@@ -23,6 +23,8 @@ import org.springframework.util.MimeType;
  * @author Rob Winch
  */
 public interface PayloadExchange {
+	// FIXME: Add frame type enum REQUEST_RESPONSE, FIRE_AND_FORGET, ...
+
 	Payload getPayload();
 
 	MimeType getDataMimeType();
