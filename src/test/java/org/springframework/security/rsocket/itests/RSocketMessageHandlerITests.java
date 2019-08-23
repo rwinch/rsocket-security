@@ -12,11 +12,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.messaging.rsocket.RSocketStrategies;
 import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
@@ -29,11 +25,12 @@ import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInt
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.MimeType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoProcessor;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +47,9 @@ public class RSocketMessageHandlerITests {
 
 	@Autowired
 	PayloadSocketAcceptorInterceptor interceptor;
+
+	@Autowired
+	ServerController controller;
 
 	private CloseableChannel server;
 
@@ -76,40 +76,53 @@ public class RSocketMessageHandlerITests {
 	public void dispose() {
 		this.requester.rsocket().dispose();
 		this.server.dispose();
+		this.controller.payloads.clear();
 	}
 
 	@Test
-	public void retrieveMono() {
-		assertThatCode(() -> this.requester.route("secure.hi").data("rob").retrieveMono(String.class).block()).isInstanceOf(
-				ApplicationErrorException.class);
+	public void retrieveMono() throws Exception {
+		String data = "rob";
+		assertThatCode(() -> this.requester.route("secure.retrieve-mono")
+				.data(data)
+				.retrieveMono(String.class)
+				.block()
+			).isInstanceOf(ApplicationErrorException.class);
 
-		String hiRob = this.requester.route("hi").data("rob").retrieveMono(String.class).block();
+		assertThat(this.controller.payloads).isEmpty();
+
+		String hiRob = this.requester.route("retrieve-mono")
+				.data(data)
+				.retrieveMono(String.class)
+				.block();
 
 		assertThat(hiRob).isEqualTo("Hi rob");
+		assertThat(this.controller.payloads).containsOnly(data);
 	}
 
 	@Test
-	public void retrieveFluxWhenDataFlux() {
+	public void retrieveFluxWhenDataFlux() throws Exception {
 		Flux<String> data = Flux.just("a", "b", "c");
-		assertThatCode(() -> this.requester.route("secure.hello")
+		assertThatCode(() -> this.requester.route("secure.secure.retrieve-flux")
 				.data(data, String.class)
 				.retrieveFlux(String.class)
 				.collectList()
 				.block()).isInstanceOf(
 				ApplicationErrorException.class);
 
-		List<String> hi = this.requester.route("hello")
+		assertThat(this.controller.payloads).isEmpty();
+
+		List<String> hi = this.requester.route("retrieve-flux")
 				.data(data, String.class)
 				.retrieveFlux(String.class)
 				.collectList()
 				.block();
 
-		assertThat(hi).contains("hello a", "hello b", "hello c");
-
+		assertThat(hi).containsOnly("hello a", "hello b", "hello c");
+		assertThat(this.controller.payloads).containsOnlyElementsOf(data.collectList().block());
 	}
 
 	@Test
-	public void retrieveFluxWhenDataString() {
+	public void retrieveFluxWhenDataString() throws Exception {
 		String data = "a";
 		assertThatCode(() -> this.requester.route("secure.hello")
 				.data(data)
@@ -118,29 +131,32 @@ public class RSocketMessageHandlerITests {
 				.block()).isInstanceOf(
 				ApplicationErrorException.class);
 
-		List<String> hi = this.requester.route("hello")
+		assertThat(this.controller.payloads).isEmpty();
+
+		List<String> hi = this.requester.route("retrieve-flux")
 				.data(data)
 				.retrieveFlux(String.class)
 				.collectList()
 				.block();
 
 		assertThat(hi).contains("hello a");
-
+		assertThat(this.controller.payloads).containsOnly(data);
 	}
 
 	@Test
-	public void send() {
-//		assertThatCode(() -> this.requester.route("secure.send")
-//				.data("hi")
-//				.send()
-//				.block())
-//				.isInstanceOf(ApplicationErrorException.class);
+	public void send() throws Exception {
+		this.requester.route("secure.send")
+				.data("hi")
+				.send()
+				.block();
+
+		assertThat(this.controller.payloads).isEmpty();
 
 		this.requester.route("send")
 				.data("hi")
 				.send()
 				.block();
-
+		assertThat(this.controller.awaitPayloads()).containsOnly("hi");
 	}
 
 	@Configuration
@@ -191,23 +207,42 @@ public class RSocketMessageHandlerITests {
 		}
 	}
 
-
-
 	@Controller
 	static class ServerController {
-		@MessageMapping({"secure.hi", "hi"})
-		String hi(String payload) {
+		private List<String> payloads = new ArrayList<>();
+
+		@MessageMapping({"secure.retrieve-mono", "retrieve-mono"})
+		String retrieveMono(String payload) {
+			add(payload);
 			return "Hi " + payload;
 		}
 
-		@MessageMapping({"secure.hello", "hello"})
-		Flux<String> hi(Flux<String> payload) {
-			return payload.map(p -> "hello " + p);
+		@MessageMapping({"secure.retrieve-flux", "retrieve-flux"})
+		Flux<String> retrieveFlux(Flux<String> payload) {
+			return payload.doOnNext(this::add)
+					.map(p -> "hello " + p);
 		}
 
 		@MessageMapping({"secure.send", "send"})
 		Mono<Void> send(Flux<String> payload) {
-			return Mono.empty();
+			return payload
+					.doOnNext(this::add)
+					.then(Mono.fromRunnable(() -> {
+						doNotifyAll();
+					}));
+		}
+
+		private synchronized void doNotifyAll() {
+			this.notifyAll();
+		}
+
+		private synchronized List<String> awaitPayloads() throws InterruptedException {
+			this.wait();
+			return this.payloads;
+		}
+
+		private void add(String p) {
+			this.payloads.add(p);
 		}
 	}
 
