@@ -24,7 +24,6 @@ import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataFlyweight;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -33,15 +32,16 @@ import java.util.stream.StreamSupport;
  * @author Rob Winch
  */
 public class SecurityMetadataFlyweight {
-	public static final String BASIC_AUTHENTICATION_MIME_TYPE = "x.spring-security/authentication.basic.v0";
+	public static final String BASIC_AUTHENTICATION_MIME_TYPE = "message/x.rsocket.authentication.basic.v0";
 
 	public static void writeBasic(CompositeByteBuf compositeMetaData, UsernamePassword usernamePassword) {
 		String username = usernamePassword.getUsername();
 		String password = usernamePassword.getPassword();
 		ByteBuf metadata = Unpooled.buffer();
-		byte[] credentials = Base64.getEncoder().encode((username + ":" + password).getBytes(StandardCharsets.US_ASCII));
-		metadata.writeBytes(credentials);
-
+		byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
+		metadata.writeInt(usernameBytes.length);
+		metadata.writeBytes(usernameBytes);
+		metadata.writeBytes(password.getBytes(StandardCharsets.UTF_8));
 		CompositeMetadataFlyweight.encodeAndAddMetadata(compositeMetaData, ByteBufAllocator.DEFAULT, BASIC_AUTHENTICATION_MIME_TYPE, metadata);
 	}
 
@@ -65,21 +65,14 @@ public class SecurityMetadataFlyweight {
 
 	public static Optional<UsernamePassword> readBasic(ByteBuf metadata) {
 		return findByType(metadata, BASIC_AUTHENTICATION_MIME_TYPE)
-			.map(b -> b.toString(StandardCharsets.UTF_8))
-			.flatMap(SecurityMetadataFlyweight::decode);
-	}
-
-	private static Optional<UsernamePassword> decode(String encoded) {
-		byte[] decoded = Base64.getDecoder().decode(encoded);
-		String token = new String(decoded);
-		int delim = token.indexOf(":");
-
-		if (delim == -1) {
-			return Optional.empty();
-		}
-		String username = token.substring(0, delim);
-		String password = token.substring(delim + 1);
-		return Optional.of(new UsernamePassword(username, password));
+			.map(b -> {
+				int usernameSize = b.readInt();
+				ByteBuf usernameBuf = b.readBytes(usernameSize);
+				ByteBuf passwordBuf = b.readBytes(b.readableBytes());
+				String username = usernameBuf.toString(StandardCharsets.UTF_8);
+				String password = passwordBuf.toString(StandardCharsets.UTF_8);
+				return new UsernamePassword(username, password);
+			});
 	}
 
 	public static Optional<ByteBuf> findByType(ByteBuf metadata, String type) {
