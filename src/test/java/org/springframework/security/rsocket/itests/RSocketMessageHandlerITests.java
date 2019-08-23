@@ -80,16 +80,19 @@ public class RSocketMessageHandlerITests {
 	}
 
 	@Test
-	public void retrieveMono() throws Exception {
+	public void retrieveMonoWhenSecureThenDenied() throws Exception {
 		String data = "rob";
 		assertThatCode(() -> this.requester.route("secure.retrieve-mono")
 				.data(data)
 				.retrieveMono(String.class)
 				.block()
 			).isInstanceOf(ApplicationErrorException.class);
-
 		assertThat(this.controller.payloads).isEmpty();
+	}
 
+	@Test
+	public void retrieveMonoWhenPublicThenGranted() throws Exception {
+		String data = "rob";
 		String hiRob = this.requester.route("retrieve-mono")
 				.data(data)
 				.retrieveMono(String.class)
@@ -100,7 +103,7 @@ public class RSocketMessageHandlerITests {
 	}
 
 	@Test
-	public void retrieveFluxWhenDataFlux() throws Exception {
+	public void retrieveFluxWhenDataFluxAndSecureThenDenied() throws Exception {
 		Flux<String> data = Flux.just("a", "b", "c");
 		assertThatCode(() -> this.requester.route("secure.secure.retrieve-flux")
 				.data(data, String.class)
@@ -110,7 +113,11 @@ public class RSocketMessageHandlerITests {
 				ApplicationErrorException.class);
 
 		assertThat(this.controller.payloads).isEmpty();
+	}
 
+	@Test
+	public void retrieveFluxWhenDataFluxAndPublicThenGranted() throws Exception {
+		Flux<String> data = Flux.just("a", "b", "c");
 		List<String> hi = this.requester.route("retrieve-flux")
 				.data(data, String.class)
 				.retrieveFlux(String.class)
@@ -122,7 +129,7 @@ public class RSocketMessageHandlerITests {
 	}
 
 	@Test
-	public void retrieveFluxWhenDataString() throws Exception {
+	public void retrieveFluxWhenDataStringAndSecureThenDenied() throws Exception {
 		String data = "a";
 		assertThatCode(() -> this.requester.route("secure.hello")
 				.data(data)
@@ -132,7 +139,11 @@ public class RSocketMessageHandlerITests {
 				ApplicationErrorException.class);
 
 		assertThat(this.controller.payloads).isEmpty();
+	}
 
+	@Test
+	public void retrieveFluxWhenDataStringAndPublicThenGranted() throws Exception {
+		String data = "a";
 		List<String> hi = this.requester.route("retrieve-flux")
 				.data(data)
 				.retrieveFlux(String.class)
@@ -144,16 +155,21 @@ public class RSocketMessageHandlerITests {
 	}
 
 	@Test
-	public void send() throws Exception {
+	public void sendWhenSecureThenDenied() throws Exception {
+		String data = "hi";
 		this.requester.route("secure.send")
-				.data("hi")
+				.data(data)
 				.send()
 				.block();
 
 		assertThat(this.controller.payloads).isEmpty();
+	}
 
+	@Test
+	public void sendWhenPublicThenGranted() throws Exception {
+		String data = "hi";
 		this.requester.route("send")
-				.data("hi")
+				.data(data)
 				.send()
 				.block();
 		assertThat(this.controller.awaitPayloads()).containsOnly("hi");
