@@ -22,14 +22,15 @@ import org.springframework.security.core.userdetails.MapReactiveUserDetailsServi
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
+import org.springframework.security.rsocket.metadata.BasicAuthenticationEncoder;
+import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight;
+import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,6 +89,20 @@ public class RSocketMessageHandlerITests {
 				.block()
 			).isInstanceOf(ApplicationErrorException.class);
 		assertThat(this.controller.payloads).isEmpty();
+	}
+
+	@Test
+	public void retrieveMonoWhenAuthorizedThenGranted() throws Exception {
+		String data = "rob";
+		UsernamePassword credentials = new UsernamePassword("rob", "password");
+		String hiRob = this.requester.route("secure.retrieve-mono")
+				.metadata(credentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.data(data)
+				.retrieveMono(String.class)
+				.block();
+
+		assertThat(hiRob).isEqualTo("Hi rob");
+		assertThat(this.controller.payloads).containsOnly(data);
 	}
 
 	@Test
@@ -193,7 +208,9 @@ public class RSocketMessageHandlerITests {
 
 		@Bean
 		public RSocketStrategies rsocketStrategies() {
-			return RSocketStrategies.create();
+			return RSocketStrategies.builder()
+					.encoder(new BasicAuthenticationEncoder())
+					.build();
 		}
 
 		@Bean

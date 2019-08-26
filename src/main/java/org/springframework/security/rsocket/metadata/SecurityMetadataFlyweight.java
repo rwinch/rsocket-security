@@ -22,6 +22,8 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataFlyweight;
+import org.springframework.http.MediaType;
+import org.springframework.util.MimeType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -32,7 +34,7 @@ import java.util.stream.StreamSupport;
  * @author Rob Winch
  */
 public class SecurityMetadataFlyweight {
-	public static final String BASIC_AUTHENTICATION_MIME_TYPE = "message/x.rsocket.authentication.basic.v0";
+	public static final MimeType BASIC_AUTHENTICATION_MIME_TYPE = new MediaType("message", "x.rsocket.authentication.basic.v0");
 
 	public static void writeBasic(CompositeByteBuf compositeMetaData, UsernamePassword usernamePassword) {
 		String username = usernamePassword.getUsername();
@@ -42,7 +44,8 @@ public class SecurityMetadataFlyweight {
 		metadata.writeInt(usernameBytes.length);
 		metadata.writeBytes(usernameBytes);
 		metadata.writeBytes(password.getBytes(StandardCharsets.UTF_8));
-		CompositeMetadataFlyweight.encodeAndAddMetadata(compositeMetaData, ByteBufAllocator.DEFAULT, BASIC_AUTHENTICATION_MIME_TYPE, metadata);
+		CompositeMetadataFlyweight.encodeAndAddMetadata(compositeMetaData, ByteBufAllocator.DEFAULT,
+				BASIC_AUTHENTICATION_MIME_TYPE.toString(), metadata);
 	}
 
 	public static class UsernamePassword {
@@ -64,7 +67,7 @@ public class SecurityMetadataFlyweight {
 	}
 
 	public static Optional<UsernamePassword> readBasic(ByteBuf metadata) {
-		return findByType(metadata, BASIC_AUTHENTICATION_MIME_TYPE)
+		return findByType(metadata, BASIC_AUTHENTICATION_MIME_TYPE.toString())
 			.map(b -> {
 				int usernameSize = b.readInt();
 				ByteBuf usernameBuf = b.readBytes(usernameSize);
