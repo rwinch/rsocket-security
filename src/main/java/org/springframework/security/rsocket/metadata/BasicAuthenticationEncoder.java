@@ -36,6 +36,7 @@ public class BasicAuthenticationEncoder extends
 	public DataBuffer encodeValue(UsernamePassword credentials,
 			DataBufferFactory bufferFactory, ResolvableType valueType, MimeType mimeType,
 			Map<String, Object> hints) {
+		// FIXME: Should leverage SecurityMetadataFlyweight
 		String username = credentials.getUsername();
 		String password = credentials.getPassword();
 		DataBuffer metadata = bufferFactory.allocateBuffer();

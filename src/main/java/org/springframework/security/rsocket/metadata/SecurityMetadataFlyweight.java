@@ -22,6 +22,8 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataFlyweight;
+
+// FIXME: Should not have Spring types
 import org.springframework.http.MediaType;
 import org.springframework.util.MimeType;
 
