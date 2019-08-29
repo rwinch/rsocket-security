@@ -18,8 +18,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -134,7 +136,7 @@ public class PayloadSocketAcceptorTests {
 
 		ArgumentCaptor<PayloadExchange> exchangeArg =
 				ArgumentCaptor.forClass(PayloadExchange.class);
-		verify(this.interceptor).intercept(exchangeArg.capture(), any());
+		verify(this.interceptor, times(2)).intercept(exchangeArg.capture(), any());
 		return exchangeArg.getValue();
 	}
 }

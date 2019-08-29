@@ -30,6 +30,7 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -113,7 +114,7 @@ public class AuthenticationPayloadInterceptorTests {
 	}
 
 	private PayloadExchange createExchange() {
-		return new DefaultPayloadExchange(createRequestPayload(), null, null);
+		return new DefaultPayloadExchange(PayloadExchangeType.REQUEST_RESPONSE, createRequestPayload(), null, null);
 	}
 
 }

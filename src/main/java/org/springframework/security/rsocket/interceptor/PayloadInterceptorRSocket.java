@@ -19,7 +19,6 @@ package org.springframework.security.rsocket.interceptor;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.ResponderRSocket;
-import io.rsocket.frame.FrameType;
 import io.rsocket.util.RSocketProxy;
 import org.reactivestreams.Publisher;
 import org.springframework.util.MimeType;
@@ -40,9 +39,17 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 
 	private final MimeType dataMimeType;
 
+	private final Context context;
+
 	public PayloadInterceptorRSocket(RSocket delegate,
 			List<PayloadInterceptor> interceptors, MimeType metadataMimeType,
 			MimeType dataMimeType) {
+		this(delegate, interceptors, metadataMimeType, dataMimeType, Context.empty());
+	}
+
+	public PayloadInterceptorRSocket(RSocket delegate,
+			List<PayloadInterceptor> interceptors, MimeType metadataMimeType,
+			MimeType dataMimeType, Context context) {
 		super(delegate);
 		this.metadataMimeType = metadataMimeType;
 		this.dataMimeType = dataMimeType;
@@ -56,11 +63,12 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 			throw new IllegalArgumentException("interceptors cannot be empty");
 		}
 		this.interceptors = interceptors;
+		this.context = context;
 	}
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
-		return intercept(payload)
+		return intercept(PayloadExchangeType.FIRE_AND_FORGET, payload)
 			.flatMap(context ->
 				this.source.fireAndForget(payload)
 					.subscriberContext(context)
@@ -69,7 +77,7 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
-		return intercept(payload)
+		return intercept(PayloadExchangeType.REQUEST_RESPONSE, payload)
 			.flatMap(context ->
 				this.source.requestResponse(payload)
 					.subscriberContext(context)
@@ -78,7 +86,7 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
-		return intercept(payload)
+		return intercept(PayloadExchangeType.REQUEST_STREAM, payload)
 			.flatMapMany(context ->
 				this.source.requestStream(payload)
 					.subscriberContext(context)
@@ -90,11 +98,11 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 		return Flux.from(payloads)
 			.switchOnFirst((signal, innerFlux) -> {
 				Payload firstPayload = signal.get();
-				return intercept(firstPayload)
+				return intercept(PayloadExchangeType.REQUEST_CHANNEL, firstPayload)
 					.flatMapMany(context ->
 						innerFlux
 							.skip(1)
-							.flatMap(p -> intercept(p).thenReturn(p))
+							.flatMap(p -> intercept(PayloadExchangeType.REQUEST_CHANNEL, p).thenReturn(p))
 							.transform(securedPayloads -> Flux.concat(Flux.just(firstPayload), securedPayloads))
 							.transform(securedPayloads -> this.source.requestChannel(securedPayloads))
 							.subscriberContext(context)
@@ -104,21 +112,22 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 
 	@Override
 	public Mono<Void> metadataPush(Payload payload) {
-		return intercept(payload)
+		return intercept(PayloadExchangeType.METADATA_PUSH, payload)
 			.flatMap(c -> this.source
 					.metadataPush(payload)
 					.subscriberContext(c)
 			);
 	}
 
-	private Mono<Context> intercept(Payload payload) {
+	private Mono<Context> intercept(PayloadExchangeType type, Payload payload) {
 		return Mono.defer(() -> {
 			ContextPayloadInterceptorChain chain = new ContextPayloadInterceptorChain(this.interceptors);
-			DefaultPayloadExchange exchange = new DefaultPayloadExchange(payload,
+			DefaultPayloadExchange exchange = new DefaultPayloadExchange(type, payload,
 					this.metadataMimeType, this.dataMimeType);
 			return chain.next(exchange)
 				.then(Mono.fromCallable(() -> chain.getContext()))
-				.defaultIfEmpty(Context.empty());
+				.defaultIfEmpty(Context.empty())
+				.subscriberContext(this.context);
 		});
 	}
 

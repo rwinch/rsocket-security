@@ -25,6 +25,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.messaging.rsocket.MetadataExtractor;
 import org.springframework.security.rsocket.interceptor.DefaultPayloadExchange;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
+import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.util.MimeType;
 import org.springframework.util.RouteMatcher;
 
@@ -65,7 +66,7 @@ public class RoutePayloadExchangeMatcherTests {
 	public void setup() {
 		this.pattern = "a.b";
 		this.matcher = new RoutePayloadExchangeMatcher(this.metadataExtractor, this.routeMatcher, this.pattern);
-		this.exchange = new DefaultPayloadExchange(this.payload, COMPOSITE_METADATA, null);
+		this.exchange = new DefaultPayloadExchange(PayloadExchangeType.REQUEST_CHANNEL, this.payload, COMPOSITE_METADATA, null);
 	}
 
 	@Test

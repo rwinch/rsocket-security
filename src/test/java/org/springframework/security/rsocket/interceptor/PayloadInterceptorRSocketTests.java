@@ -497,7 +497,7 @@ public class PayloadInterceptorRSocketTests {
 	private Answer<Object> withAuthenticated(Authentication authentication) {
 		return invocation -> {
 			PayloadInterceptorChain c = (PayloadInterceptorChain) invocation.getArguments()[1];
-			return c.next(new DefaultPayloadExchange(this.payload, null, null))
+			return c.next(new DefaultPayloadExchange(PayloadExchangeType.REQUEST_CHANNEL, this.payload, null, null))
 					.subscriberContext(ReactiveSecurityContextHolder.withAuthentication(authentication));
 		};
 	}

@@ -1,6 +1,7 @@
 package org.springframework.security.rsocket.interceptor;
 
 import io.rsocket.ConnectionSetupPayload;
+import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
 import org.springframework.lang.Nullable;
@@ -10,6 +11,7 @@ import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.util.List;
 
@@ -45,9 +47,23 @@ public class PayloadSocketAcceptor implements SocketAcceptor {
 
 		MimeType metadataMimeType = parseMimeType(setup.metadataMimeType(), this.defaultMetadataMimeType);
 		Assert.notNull(metadataMimeType, "No `metadataMimeType` in ConnectionSetupPayload and no default value");
+
 		// FIXME do we want to make the sendingSocket available in the PayloadExchange
-		return this.delegate.accept(setup, sendingSocket)
-			.map(acceptingSocket -> new PayloadInterceptorRSocket(acceptingSocket, this.interceptors, metadataMimeType, dataMimeType));
+		return intercept(setup, dataMimeType, metadataMimeType)
+			.flatMap(ctx -> this.delegate.accept(setup, sendingSocket)
+				.map(acceptingSocket -> new PayloadInterceptorRSocket(acceptingSocket, this.interceptors, metadataMimeType, dataMimeType, ctx))
+			);
+	}
+
+	private Mono<Context> intercept(Payload payload, MimeType dataMimeType, MimeType metadataMimeType) {
+		return Mono.defer(() -> {
+			ContextPayloadInterceptorChain chain = new ContextPayloadInterceptorChain(this.interceptors);
+			DefaultPayloadExchange exchange = new DefaultPayloadExchange(PayloadExchangeType.SETUP, payload,
+					metadataMimeType, dataMimeType);
+			return chain.next(exchange)
+					.then(Mono.fromCallable(() -> chain.getContext()))
+					.defaultIfEmpty(Context.empty());
+		});
 	}
 
 	private MimeType parseMimeType(String str, MimeType defaultMimeType) {

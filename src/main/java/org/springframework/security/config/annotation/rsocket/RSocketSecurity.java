@@ -6,9 +6,11 @@ import org.springframework.core.ResolvableType;
 import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authorization.AuthenticatedReactiveAuthorizationManager;
+import org.springframework.security.authorization.AuthorityReactiveAuthorizationManager;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.interceptor.authentication.AnonymousPayloadInterceptor;
@@ -17,6 +19,7 @@ import org.springframework.security.rsocket.interceptor.authorization.Authorizat
 import org.springframework.security.rsocket.interceptor.authorization.PayloadExchangeMatcherReactiveAuthorizationManager;
 import org.springframework.security.rsocket.util.PayloadExchangeAuthorizationContext;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcher;
+import org.springframework.security.rsocket.util.PayloadExchangeMatcher.MatchResult;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcherEntry;
 import org.springframework.security.rsocket.util.PayloadExchangeMatchers;
 import org.springframework.security.rsocket.util.RoutePayloadExchangeMatcher;
@@ -75,6 +78,12 @@ public class RSocketSecurity {
 		private PayloadExchangeMatcherReactiveAuthorizationManager.Builder authzBuilder =
 				PayloadExchangeMatcherReactiveAuthorizationManager.builder();
 
+		public Access setup() {
+			return matcher(e -> PayloadExchangeType.SETUP.equals(e.getType()) ?
+					MatchResult.match() :
+					MatchResult.notMatch());
+		}
+
 		public Access anyExchange() {
 			return matcher(PayloadExchangeMatchers.anyExchange());
 		}
@@ -106,6 +115,10 @@ public class RSocketSecurity {
 
 			public AuthorizePayloadsSpec authenticated() {
 				return access(AuthenticatedReactiveAuthorizationManager.authenticated());
+			}
+
+			public AuthorizePayloadsSpec hasRole(String role) {
+				return access(AuthorityReactiveAuthorizationManager.hasRole(role));
 			}
 
 			public AuthorizePayloadsSpec permitAll() {

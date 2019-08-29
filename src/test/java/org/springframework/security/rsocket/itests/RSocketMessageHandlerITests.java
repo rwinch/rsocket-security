@@ -92,6 +92,19 @@ public class RSocketMessageHandlerITests {
 	}
 
 	@Test
+	public void retrieveMonoWhenAuthenticationFailedThenException() throws Exception {
+		String data = "rob";
+		UsernamePassword credentials = new UsernamePassword("invalid", "password");
+		assertThatCode(() -> this.requester.route("secure.retrieve-mono")
+				.metadata(credentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.data(data)
+				.retrieveMono(String.class)
+				.block()
+		).isInstanceOf(ApplicationErrorException.class);
+		assertThat(this.controller.payloads).isEmpty();
+	}
+
+	@Test
 	public void retrieveMonoWhenAuthorizedThenGranted() throws Exception {
 		String data = "rob";
 		UsernamePassword credentials = new UsernamePassword("rob", "password");

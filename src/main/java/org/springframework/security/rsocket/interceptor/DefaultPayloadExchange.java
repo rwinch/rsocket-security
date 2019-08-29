@@ -24,17 +24,25 @@ import org.springframework.util.MimeType;
  */
 public class DefaultPayloadExchange implements PayloadExchange {
 
+	private final PayloadExchangeType type;
+
 	private final Payload payload;
 
 	private final MimeType metadataMimeType;
 
 	private final MimeType dataMimeType;
 
-	public DefaultPayloadExchange(Payload payload, MimeType metadataMimeType,
+	public DefaultPayloadExchange(PayloadExchangeType type, Payload payload, MimeType metadataMimeType,
 			MimeType dataMimeType) {
+		this.type = type;
 		this.payload = payload;
 		this.metadataMimeType = metadataMimeType;
 		this.dataMimeType = dataMimeType;
+	}
+
+	@Override
+	public PayloadExchangeType getType() {
+		return this.type;
 	}
 
 	@Override
