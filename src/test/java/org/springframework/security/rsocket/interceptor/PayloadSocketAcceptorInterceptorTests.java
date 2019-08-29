@@ -4,6 +4,7 @@ import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
+import io.rsocket.metadata.WellKnownMimeType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,7 +12,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.http.MediaType;
-import org.springframework.messaging.rsocket.MetadataExtractor;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
@@ -59,7 +59,7 @@ public class PayloadSocketAcceptorInterceptorTests {
 
 		PayloadExchange exchange = captureExchange();
 
-		assertThat(exchange.getMetadataMimeType()).isEqualTo(MetadataExtractor.COMPOSITE_METADATA);
+		assertThat(exchange.getMetadataMimeType().toString()).isEqualTo(WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
 		assertThat(exchange.getDataMimeType()).isEqualTo(MediaType.APPLICATION_JSON);
 	}
 
@@ -80,7 +80,7 @@ public class PayloadSocketAcceptorInterceptorTests {
 
 		PayloadExchange exchange = captureExchange();
 
-		assertThat(exchange.getMetadataMimeType()).isEqualTo(MetadataExtractor.COMPOSITE_METADATA);
+		assertThat(exchange.getMetadataMimeType().toString()).isEqualTo(WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
 		assertThat(exchange.getDataMimeType()).isEqualTo(MediaType.APPLICATION_JSON);
 	}
 

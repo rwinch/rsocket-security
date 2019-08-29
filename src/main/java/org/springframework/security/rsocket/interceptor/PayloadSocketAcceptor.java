@@ -4,8 +4,8 @@ import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
+import io.rsocket.metadata.WellKnownMimeType;
 import org.springframework.lang.Nullable;
-import org.springframework.messaging.rsocket.MetadataExtractor;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
@@ -26,7 +26,8 @@ public class PayloadSocketAcceptor implements SocketAcceptor {
 	@Nullable
 	private MimeType defaultDataMimeType;
 
-	private MimeType defaultMetadataMimeType = MetadataExtractor.COMPOSITE_METADATA;
+	private MimeType defaultMetadataMimeType =
+			MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
 
 	public PayloadSocketAcceptor(SocketAcceptor delegate, List<PayloadInterceptor> interceptors) {
 		Assert.notNull(delegate, "delegate cannot be null");

@@ -1,11 +1,12 @@
 package org.springframework.security.rsocket.interceptor;
 
 import io.rsocket.SocketAcceptor;
+import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.plugins.SocketAcceptorInterceptor;
 import org.springframework.lang.Nullable;
-import org.springframework.messaging.rsocket.MetadataExtractor;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 
 import java.util.List;
 
@@ -19,7 +20,8 @@ public class PayloadSocketAcceptorInterceptor implements SocketAcceptorIntercept
 	@Nullable
 	private MimeType defaultDataMimeType;
 
-	private MimeType defaultMetadataMimeType = MetadataExtractor.COMPOSITE_METADATA;
+	private MimeType defaultMetadataMimeType =
+		MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
 
 	public PayloadSocketAcceptorInterceptor(List<PayloadInterceptor> interceptors) {
 		this.interceptors = interceptors;

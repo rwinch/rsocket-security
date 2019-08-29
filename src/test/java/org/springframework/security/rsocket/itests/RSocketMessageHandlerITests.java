@@ -61,7 +61,7 @@ public class RSocketMessageHandlerITests {
 		this.server = RSocketFactory.receive()
 				.frameDecoder(PayloadDecoder.ZERO_COPY)
 				.addSocketAcceptorPlugin(this.interceptor)
-				.acceptor(this.handler.serverResponder())
+				.acceptor(this.handler.responder())
 				.transport(TcpServerTransport.create("localhost", 7000))
 				.start()
 				.block();
