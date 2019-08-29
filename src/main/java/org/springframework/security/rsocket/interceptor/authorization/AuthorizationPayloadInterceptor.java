@@ -26,6 +26,8 @@ import org.springframework.security.rsocket.interceptor.PayloadExchange;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
 
 /**
+ * Provides authorization of the {@link PayloadExchange}.
+ *
  * @author Rob Winch
  * @since 5.2
  */

@@ -19,6 +19,7 @@ package org.springframework.security.rsocket.authentication;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
 import io.rsocket.Payload;
+import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.DefaultPayload;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,12 +27,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
+import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.test.publisher.PublisherProbe;
@@ -52,6 +56,8 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class AuthenticationPayloadInterceptorTests {
+	static final MimeType COMPOSITE_METADATA = MimeTypeUtils.parseMimeType(
+			WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
 	@Mock
 	ReactiveAuthenticationManager authenticationManager;
 
@@ -114,7 +120,8 @@ public class AuthenticationPayloadInterceptorTests {
 	}
 
 	private PayloadExchange createExchange() {
-		return new DefaultPayloadExchange(PayloadExchangeType.REQUEST_RESPONSE, createRequestPayload(), null, null);
+		return new DefaultPayloadExchange(PayloadExchangeType.REQUEST_RESPONSE, createRequestPayload(), COMPOSITE_METADATA,
+				MediaType.APPLICATION_JSON);
 	}
 
 }

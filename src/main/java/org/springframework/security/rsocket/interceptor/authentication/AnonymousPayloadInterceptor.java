@@ -29,6 +29,9 @@ import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
 import java.util.List;
 
 /**
+ * If {@link ReactiveSecurityContextHolder} is empty populates an
+ * {@code AnonymousAuthenticationToken}
+ *
  * @author Rob Winch
  * @since 5.2
  */

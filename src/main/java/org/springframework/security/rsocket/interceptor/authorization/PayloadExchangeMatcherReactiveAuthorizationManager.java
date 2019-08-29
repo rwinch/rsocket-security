@@ -19,6 +19,7 @@ package org.springframework.security.rsocket.interceptor.authorization;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
@@ -37,6 +38,7 @@ public class PayloadExchangeMatcherReactiveAuthorizationManager implements React
 	private final List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadExchangeAuthorizationContext>>> mappings;
 
 	private PayloadExchangeMatcherReactiveAuthorizationManager(List<PayloadExchangeMatcherEntry<ReactiveAuthorizationManager<PayloadExchangeAuthorizationContext>>> mappings) {
+		Assert.notEmpty(mappings, "mappings cannot be null");
 		this.mappings = mappings;
 	}
 

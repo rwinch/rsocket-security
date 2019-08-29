@@ -29,6 +29,10 @@ import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
 import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight;
 
 /**
+ * Uses the provided {@code ReactiveAuthenticationManager} to authenticate a Payload. If
+ * authentication is successful, then the result is added to
+ * {@link ReactiveSecurityContextHolder}.
+ *
  * @author Rob Winch
  * @since 5.2
  */
@@ -41,6 +45,10 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 			.map(credentials -> new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()))
 			.orElse(null);
 
+	/**
+	 * Creates a new instance
+	 * @param authenticationManager the manager to use. Cannot be null
+	 */
 	public AuthenticationPayloadInterceptor(ReactiveAuthenticationManager authenticationManager) {
 		Assert.notNull(authenticationManager, "authenticationManager cannot be null");
 		this.authenticationManager = authenticationManager;

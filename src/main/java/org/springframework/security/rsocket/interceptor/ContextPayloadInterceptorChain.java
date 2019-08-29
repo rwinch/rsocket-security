@@ -26,8 +26,13 @@ import java.util.ListIterator;
  * A {@link PayloadInterceptorChain} which exposes the Reactor {@link Context} via a member variable.
  * This class is not Thread safe, so a new instance must be created for each Thread.
  *
+ * Internally {@code ContextPayloadInterceptorChain} is used to ensure that the Reactor
+ * {@code Context} is captured so it can be transferred to subscribers outside of this
+ * {@code Context} in {@code PayloadSocketAcceptor}.
+ *
  * @author Rob Winch
  * @since 5.2
+ * @see PayloadSocketAcceptor
  */
 class ContextPayloadInterceptorChain implements PayloadInterceptorChain {
 

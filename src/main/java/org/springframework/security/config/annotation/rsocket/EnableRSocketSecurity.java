@@ -25,8 +25,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Add this annotation to a {@code Configuration} class to have Spring Security
+ * {@link RSocketSecurity} support added.
+ *
  * @author Rob Winch
  * @since 5.2
+ * @see RSocketSecurity
  */
 @Documented
 @Target(ElementType.TYPE)

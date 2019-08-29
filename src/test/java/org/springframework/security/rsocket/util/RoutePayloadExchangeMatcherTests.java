@@ -17,16 +17,19 @@
 package org.springframework.security.rsocket.util;
 
 import io.rsocket.Payload;
+import io.rsocket.metadata.WellKnownMimeType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.http.MediaType;
 import org.springframework.messaging.rsocket.MetadataExtractor;
 import org.springframework.security.rsocket.interceptor.DefaultPayloadExchange;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
 import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.RouteMatcher;
 
 import java.util.Collections;
@@ -41,8 +44,8 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RoutePayloadExchangeMatcherTests {
-	// FIXME: This needs to be passed in as an argument PayloadExchange
-	static final MimeType COMPOSITE_METADATA = new MimeType("message", "x.rsocket.composite-metadata.v0");
+	static final MimeType COMPOSITE_METADATA = MimeTypeUtils.parseMimeType(
+			WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
 
 	@Mock
 	private MetadataExtractor metadataExtractor;
@@ -66,7 +69,8 @@ public class RoutePayloadExchangeMatcherTests {
 	public void setup() {
 		this.pattern = "a.b";
 		this.matcher = new RoutePayloadExchangeMatcher(this.metadataExtractor, this.routeMatcher, this.pattern);
-		this.exchange = new DefaultPayloadExchange(PayloadExchangeType.REQUEST_CHANNEL, this.payload, COMPOSITE_METADATA, null);
+		this.exchange = new DefaultPayloadExchange(PayloadExchangeType.REQUEST_CHANNEL, this.payload, COMPOSITE_METADATA,
+				MediaType.APPLICATION_JSON);
 	}
 
 	@Test

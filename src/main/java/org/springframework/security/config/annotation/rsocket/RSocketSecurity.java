@@ -45,6 +45,62 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Allows configuring RSocket based security.
+ *
+ * A minimal example can be found below:
+ *
+ * <pre class="code">
+ * &#064;EnableRSocketSecurity
+ * public class SecurityConfig {
+ *     // @formatter:off
+ *     &#064;Bean
+ *     PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity rsocket) {
+ *         rsocket
+ *             .authorizePayload(authorize ->
+ *                 authorize
+ *                     .anyRequest().authenticated()
+ *             );
+ *         return rsocket.build();
+ *     }
+ *     // @formatter:on
+ *
+ *     // @formatter:off
+ *     &#064;Bean
+ *     public MapReactiveUserDetailsService userDetailsService() {
+ *          UserDetails user = User.withDefaultPasswordEncoder()
+ *               .username("user")
+ *               .password("password")
+ *               .roles("USER")
+ *               .build();
+ *          return new MapReactiveUserDetailsService(user);
+ *     }
+ *     // @formatter:on
+ * }
+ * </pre>
+ *
+ * A more advanced configuration can be seen below:
+ *
+ * <pre class="code">
+ * &#064;EnableRSocketSecurity
+ * public class SecurityConfig {
+ *     // @formatter:off
+ *     &#064;Bean
+ *     PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity rsocket) {
+ *         rsocket
+ *             .authorizePayload(authorize ->
+ *                 authorize
+ *                     // must have ROLE_SETUP to make connection
+ *                     .setup().hasRole("SETUP")
+ *                      // must have ROLE_ADMIN for routes starting with "admin."
+ *                     .route("admin.*").hasRole("ADMIN")
+ *                     // any other request must be authenticated for
+ *                     .anyRequest().authenticated()
+ *             );
+ *         return rsocket.build();
+ *     }
+ *     // @formatter:on
+ * }
+ * </pre>
  * @author Rob Winch
  * @since 5.2
  */

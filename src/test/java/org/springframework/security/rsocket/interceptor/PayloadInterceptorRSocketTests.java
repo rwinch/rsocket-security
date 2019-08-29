@@ -18,6 +18,7 @@ package org.springframework.security.rsocket.interceptor;
 
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
+import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.RSocketProxy;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,11 +28,13 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.reactivestreams.Publisher;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -54,6 +57,10 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PayloadInterceptorRSocketTests {
+
+	static final MimeType COMPOSITE_METADATA = MimeTypeUtils.parseMimeType(
+			WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
+
 	@Mock
 	RSocket delegate;
 
@@ -73,9 +80,9 @@ public class PayloadInterceptorRSocketTests {
 
 	TestPublisher<Payload> payloadResult = TestPublisher.createCold();
 
-	private MimeType metadataMimeType;
+	private MimeType metadataMimeType = COMPOSITE_METADATA;
 
-	private MimeType dataMimeType;
+	private MimeType dataMimeType = MediaType.APPLICATION_JSON;
 
 	@Test
 	public void constructorWhenNullDelegateThenException() {
@@ -497,7 +504,8 @@ public class PayloadInterceptorRSocketTests {
 	private Answer<Object> withAuthenticated(Authentication authentication) {
 		return invocation -> {
 			PayloadInterceptorChain c = (PayloadInterceptorChain) invocation.getArguments()[1];
-			return c.next(new DefaultPayloadExchange(PayloadExchangeType.REQUEST_CHANNEL, this.payload, null, null))
+			return c.next(new DefaultPayloadExchange(PayloadExchangeType.REQUEST_CHANNEL, this.payload, this.metadataMimeType,
+					this.dataMimeType))
 					.subscriberContext(ReactiveSecurityContextHolder.withAuthentication(authentication));
 		};
 	}
