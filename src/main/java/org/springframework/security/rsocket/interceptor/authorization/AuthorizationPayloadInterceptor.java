@@ -20,6 +20,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptorChain;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
@@ -36,6 +37,7 @@ public class AuthorizationPayloadInterceptor implements PayloadInterceptor {
 
 	public AuthorizationPayloadInterceptor(
 			ReactiveAuthorizationManager<PayloadExchange> authorizationManager) {
+		Assert.notNull(authorizationManager, "authorizationManager cannot be null");
 		this.authorizationManager = authorizationManager;
 	}
 
