@@ -103,7 +103,7 @@ public class PayloadInterceptorRSocket extends RSocketProxy implements Responder
 					.flatMapMany(context ->
 						innerFlux
 							.skip(1)
-							.flatMap(p -> intercept(PayloadExchangeType.REQUEST_CHANNEL, p).thenReturn(p))
+							.flatMap(p -> intercept(PayloadExchangeType.PAYLOAD, p).thenReturn(p))
 							.transform(securedPayloads -> Flux.concat(Flux.just(firstPayload), securedPayloads))
 							.transform(securedPayloads -> this.source.requestChannel(securedPayloads))
 							.subscriberContext(context)

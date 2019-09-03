@@ -227,7 +227,7 @@ public class RSocketMessageHandlerConnectionITests {
 						.setup().hasRole("SETUP")
 						.route("secure.admin.*").hasRole("ADMIN")
 						.route("secure.**").hasRole("USER")
-						.anyExchange().permitAll()
+						.anyRequest().permitAll()
 				);
 			return rsocket.build();
 		}

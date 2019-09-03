@@ -31,6 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Maps a @{code List} of {@link PayloadExchangeMatcher} instances to
+ * @{code ReactiveAuthorizationManager} instances.
+ *
  * @author Rob Winch
  * @since 5.2
  */

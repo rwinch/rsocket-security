@@ -17,12 +17,33 @@
 package org.springframework.security.rsocket.util;
 
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
+import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import reactor.core.publisher.Mono;
 
 /**
  * @author Rob Winch
  */
 public abstract class PayloadExchangeMatchers {
+
+	public static PayloadExchangeMatcher setup() {
+		return new PayloadExchangeMatcher() {
+			public Mono<MatchResult> matches(PayloadExchange exchange) {
+				return PayloadExchangeType.SETUP.equals(exchange.getType()) ?
+						MatchResult.match() :
+						MatchResult.notMatch();
+			}
+		};
+	}
+
+	public static PayloadExchangeMatcher anyRequest() {
+		return new PayloadExchangeMatcher() {
+			public Mono<MatchResult> matches(PayloadExchange exchange) {
+				return exchange.getType().isRequest() ?
+						MatchResult.match() :
+						MatchResult.notMatch();
+			}
+		};
+	}
 
 	public static PayloadExchangeMatcher anyExchange() {
 		return new PayloadExchangeMatcher() {

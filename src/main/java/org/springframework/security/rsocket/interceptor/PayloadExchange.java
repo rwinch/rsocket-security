@@ -20,6 +20,8 @@ import io.rsocket.Payload;
 import org.springframework.util.MimeType;
 
 /**
+ * Contract for a Payload interaction.
+ *
  * @author Rob Winch
  * @since 5.2
  */

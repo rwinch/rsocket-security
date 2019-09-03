@@ -26,7 +26,6 @@ import org.springframework.security.authorization.AuthorityReactiveAuthorization
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.interceptor.authentication.AnonymousPayloadInterceptor;
@@ -35,7 +34,6 @@ import org.springframework.security.rsocket.interceptor.authorization.Authorizat
 import org.springframework.security.rsocket.interceptor.authorization.PayloadExchangeMatcherReactiveAuthorizationManager;
 import org.springframework.security.rsocket.util.PayloadExchangeAuthorizationContext;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcher;
-import org.springframework.security.rsocket.util.PayloadExchangeMatcher.MatchResult;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcherEntry;
 import org.springframework.security.rsocket.util.PayloadExchangeMatchers;
 import org.springframework.security.rsocket.util.RoutePayloadExchangeMatcher;
@@ -152,12 +150,10 @@ public class RSocketSecurity {
 				PayloadExchangeMatcherReactiveAuthorizationManager.builder();
 
 		public Access setup() {
-			return matcher(e -> PayloadExchangeType.SETUP.equals(e.getType()) ?
-					MatchResult.match() :
-					MatchResult.notMatch());
+			return matcher(PayloadExchangeMatchers.setup());
 		}
 
-		public Access anyExchange() {
+		public Access anyRequest() {
 			return matcher(PayloadExchangeMatchers.anyExchange());
 		}
 

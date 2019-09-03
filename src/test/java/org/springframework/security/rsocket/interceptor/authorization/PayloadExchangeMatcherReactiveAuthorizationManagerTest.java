@@ -16,6 +16,7 @@
 
 package org.springframework.security.rsocket.interceptor.authorization;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -23,6 +24,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
+import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.security.rsocket.util.PayloadExchangeAuthorizationContext;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcher;
 import org.springframework.security.rsocket.util.PayloadExchangeMatcherEntry;
@@ -47,6 +49,11 @@ public class PayloadExchangeMatcherReactiveAuthorizationManagerTest {
 
 	@Mock
 	private PayloadExchange exchange;
+
+	@Before
+	public void setup() {
+		when(this.exchange.getType()).thenReturn(PayloadExchangeType.REQUEST_RESPONSE);
+	}
 
 	@Test
 	public void checkWhenGrantedThenGranted() {

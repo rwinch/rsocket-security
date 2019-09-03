@@ -263,7 +263,7 @@ public class RSocketMessageHandlerITests {
 					.authorizePayload(authorize -> {
 						authorize
 								.route("secure.*").authenticated()
-								.anyExchange().permitAll();
+								.anyRequest().permitAll();
 					});
 			return rsocket.build();
 		}
