@@ -35,7 +35,7 @@ import java.util.List;
  * @author Rob Winch
  * @since 5.2
  */
-public class PayloadSocketAcceptor implements SocketAcceptor {
+class PayloadSocketAcceptor implements SocketAcceptor {
 	private final SocketAcceptor delegate;
 
 	private final List<PayloadInterceptor> interceptors;

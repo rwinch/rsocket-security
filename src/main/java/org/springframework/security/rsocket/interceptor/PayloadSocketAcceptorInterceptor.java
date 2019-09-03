@@ -27,6 +27,8 @@ import org.springframework.util.MimeTypeUtils;
 import java.util.List;
 
 /**
+ * A {@link SocketAcceptorInterceptor} that applies the {@link PayloadInterceptor}s
+ *
  * @author Rob Winch
  * @since 5.2
  */

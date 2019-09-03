@@ -29,11 +29,11 @@ import reactor.util.context.Context;
 import java.util.List;
 
 /**
+ * Combines the {@link PayloadInterceptor} with a {@link ResponderRSocket}
  * @author Rob Winch
  * @since 5.2
  */
-// FIXME: Consider making package scope (aligns with Spring support and allows injecting additional/different values)
-public class PayloadInterceptorRSocket extends RSocketProxy implements ResponderRSocket {
+class PayloadInterceptorRSocket extends RSocketProxy implements ResponderRSocket {
 	private final List<PayloadInterceptor> interceptors;
 
 	private final MimeType metadataMimeType;
