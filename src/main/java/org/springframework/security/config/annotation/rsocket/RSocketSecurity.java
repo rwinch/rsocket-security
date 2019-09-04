@@ -104,11 +104,48 @@ import java.util.List;
  */
 public class RSocketSecurity {
 
-	private ReactiveAuthenticationManager authenticationManager;
+	private BasicAuthenticationSpec basicAuthSpec;
 
 	private AuthorizePayloadsSpec authorizePayload;
 
 	private ApplicationContext context;
+
+	private ReactiveAuthenticationManager authenticationManager;
+
+	public RSocketSecurity authenticationManager(ReactiveAuthenticationManager authenticationManager) {
+		this.authenticationManager = authenticationManager;
+		return this;
+	}
+
+	private ReactiveAuthenticationManager getAuthenticationManager(ReactiveAuthenticationManager preferredManager) {
+		if (preferredManager == null) {
+			return this.authenticationManager;
+		}
+		return preferredManager;
+	}
+	public RSocketSecurity basicAuthentication(Customizer<BasicAuthenticationSpec> basic) {
+		if (this.basicAuthSpec == null) {
+			this.basicAuthSpec = new BasicAuthenticationSpec();
+		}
+		basic.customize(this.basicAuthSpec);
+		return this;
+	}
+
+	public class BasicAuthenticationSpec {
+		private ReactiveAuthenticationManager authenticationManager;
+
+		public BasicAuthenticationSpec authenticationManager(ReactiveAuthenticationManager authenticationManager) {
+			this.authenticationManager = authenticationManager;
+			return this;
+		}
+
+		protected AuthenticationPayloadInterceptor build() {
+			ReactiveAuthenticationManager manager = getAuthenticationManager(this.authenticationManager);
+			return new AuthenticationPayloadInterceptor(manager);
+		}
+
+		private BasicAuthenticationSpec() {}
+	}
 
 	public RSocketSecurity authorizePayload(Customizer<AuthorizePayloadsSpec> authorize) {
 		if (this.authorizePayload == null) {
@@ -130,18 +167,15 @@ public class RSocketSecurity {
 	private List<PayloadInterceptor> payloadInterceptors() {
 		List<PayloadInterceptor> payloadInterceptors = new ArrayList<>();
 
-		payloadInterceptors.add(new AuthenticationPayloadInterceptor(this.authenticationManager));
+		if (this.basicAuthSpec != null) {
+			payloadInterceptors.add(this.basicAuthSpec.build());
+		}
 		payloadInterceptors.add(new AnonymousPayloadInterceptor("anonymousUser"));
 
 		if (this.authorizePayload != null) {
 			payloadInterceptors.add(this.authorizePayload.build());
 		}
 		return payloadInterceptors;
-	}
-
-	public RSocketSecurity authenticationManager(ReactiveAuthenticationManager authenticationManager) {
-		this.authenticationManager = authenticationManager;
-		return this;
 	}
 
 	public class AuthorizePayloadsSpec {
