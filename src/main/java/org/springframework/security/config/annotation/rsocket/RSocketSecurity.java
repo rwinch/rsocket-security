@@ -210,21 +210,6 @@ public class RSocketSecurity {
 		return this.context.getBean(beanClass);
 	}
 
-	private <T> T getBeanOrNull(Class<T> beanClass) {
-		return getBeanOrNull(ResolvableType.forClass(beanClass));
-	}
-
-	private <T> T getBeanOrNull(ResolvableType type) {
-		if (this.context == null) {
-			return null;
-		}
-		String[] names =  this.context.getBeanNamesForType(type);
-		if (names.length == 1) {
-			return (T) this.context.getBean(names[0]);
-		}
-		return null;
-	}
-
 	protected void setApplicationContext(ApplicationContext applicationContext)
 			throws BeansException {
 		this.context = applicationContext;
