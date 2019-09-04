@@ -28,8 +28,8 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
-    mavenCentral()
     maven { url 'https://repo.spring.io/libs-snapshot' }
+    mavenCentral()
     maven { url "https://oss.jfrog.org/artifactory/libs-snapshot" } // RSocket
 }
 
