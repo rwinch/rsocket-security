@@ -117,12 +117,6 @@ public class RSocketSecurity {
 		return this;
 	}
 
-	private ReactiveAuthenticationManager getAuthenticationManager(ReactiveAuthenticationManager preferredManager) {
-		if (preferredManager == null) {
-			return this.authenticationManager;
-		}
-		return preferredManager;
-	}
 	public RSocketSecurity basicAuthentication(Customizer<BasicAuthenticationSpec> basic) {
 		if (this.basicAuthSpec == null) {
 			this.basicAuthSpec = new BasicAuthenticationSpec();
@@ -139,8 +133,15 @@ public class RSocketSecurity {
 			return this;
 		}
 
+		private ReactiveAuthenticationManager getAuthenticationManager() {
+			if (this.authenticationManager == null) {
+				return RSocketSecurity.this.authenticationManager;
+			}
+			return this.authenticationManager;
+		}
+
 		protected AuthenticationPayloadInterceptor build() {
-			ReactiveAuthenticationManager manager = getAuthenticationManager(this.authenticationManager);
+			ReactiveAuthenticationManager manager = getAuthenticationManager();
 			return new AuthenticationPayloadInterceptor(manager);
 		}
 
@@ -242,6 +243,21 @@ public class RSocketSecurity {
 			return null;
 		}
 		return this.context.getBean(beanClass);
+	}
+
+	private <T> T getBeanOrNull(Class<T> beanClass) {
+		return getBeanOrNull(ResolvableType.forClass(beanClass));
+	}
+
+	private <T> T getBeanOrNull(ResolvableType type) {
+		if (this.context == null) {
+			return null;
+		}
+		String[] names =  this.context.getBeanNamesForType(type);
+		if (names.length == 1) {
+			return (T) this.context.getBean(names[0]);
+		}
+		return null;
 	}
 
 	protected void setApplicationContext(ApplicationContext applicationContext)
