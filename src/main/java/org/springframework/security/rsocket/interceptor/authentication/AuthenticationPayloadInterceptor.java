@@ -16,17 +16,14 @@
 
 package org.springframework.security.rsocket.interceptor.authentication;
 
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.util.Assert;
-import reactor.core.publisher.Mono;
-import org.springframework.security.rsocket.interceptor.PayloadInterceptorChain;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
-import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight;
+import org.springframework.security.rsocket.interceptor.PayloadInterceptorChain;
+import org.springframework.util.Assert;
+import reactor.core.publisher.Mono;
 
 /**
  * Uses the provided {@code ReactiveAuthenticationManager} to authenticate a Payload. If
@@ -40,10 +37,8 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 
 	private final ReactiveAuthenticationManager authenticationManager;
 
-	private Converter<PayloadExchange, Authentication> authenticationConverter = exchange ->
-		SecurityMetadataFlyweight.readBasic(exchange.getPayload().metadata())
-			.map(credentials -> new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()))
-			.orElse(null);
+	private PayloadExchangeAuthenticationConverter authenticationConverter =
+			new BasicAuthenticationPayloadExchangeConverter();
 
 	/**
 	 * Creates a new instance
@@ -54,14 +49,21 @@ public class AuthenticationPayloadInterceptor implements PayloadInterceptor {
 		this.authenticationManager = authenticationManager;
 	}
 
+	/**
+	 * Sets the convert to be used
+	 * @param authenticationConverter
+	 */
+	public void setAuthenticationConverter(
+			PayloadExchangeAuthenticationConverter authenticationConverter) {
+		Assert.notNull(authenticationConverter, "authenticationConverter cannot be null");
+		this.authenticationConverter = authenticationConverter;
+	}
+
 	public Mono<Void> intercept(PayloadExchange exchange, PayloadInterceptorChain chain) {
-		return Mono.defer(() -> {
-			Authentication authentication = this.authenticationConverter.convert(exchange);
-			return Mono.justOrEmpty(authentication)
-					.switchIfEmpty(chain.next(exchange).then(Mono.empty()))
-					.flatMap(a -> this.authenticationManager.authenticate(authentication))
-					.flatMap(a -> onAuthenticationSuccess(chain.next(exchange), a));
-		});
+		return this.authenticationConverter.convert(exchange)
+			.switchIfEmpty(chain.next(exchange).then(Mono.empty()))
+			.flatMap(a -> this.authenticationManager.authenticate(a))
+			.flatMap(a -> onAuthenticationSuccess(chain.next(exchange), a));
 	}
 
 	private Mono<Void> onAuthenticationSuccess(Mono<Void> payload, Authentication authentication) {

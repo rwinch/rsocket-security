@@ -19,6 +19,7 @@ package org.springframework.security.rsocket.authentication;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
 import io.rsocket.Payload;
+import io.rsocket.metadata.CompositeMetadataFlyweight;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.DefaultPayload;
 import org.junit.Test;
@@ -27,6 +28,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.core.ResolvableType;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -34,6 +39,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.rsocket.interceptor.PayloadExchangeType;
 import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
+import org.springframework.security.rsocket.metadata.BasicAuthenticationEncoder;
+import org.springframework.security.rsocket.metadata.UsernamePasswordMetadata;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Mono;
@@ -42,8 +49,8 @@ import reactor.test.publisher.PublisherProbe;
 import org.springframework.security.rsocket.interceptor.DefaultPayloadExchange;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptorChain;
 import org.springframework.security.rsocket.interceptor.PayloadExchange;
-import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight;
-import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Matchers.any;
@@ -113,10 +120,24 @@ public class AuthenticationPayloadInterceptorTests {
 	}
 
 	private Payload createRequestPayload() {
-		CompositeByteBuf metadata = ByteBufAllocator.DEFAULT.compositeBuffer();
-		UsernamePassword credentials = new UsernamePassword("user", "password");
-		SecurityMetadataFlyweight.writeBasic(metadata, credentials);
-		return DefaultPayload.create(ByteBufAllocator.DEFAULT.buffer(), metadata);
+
+		UsernamePasswordMetadata credentials = new UsernamePasswordMetadata("user", "password");
+		BasicAuthenticationEncoder encoder = new BasicAuthenticationEncoder();
+		DefaultDataBufferFactory factory = new DefaultDataBufferFactory();
+		ResolvableType elementType = ResolvableType
+				.forClass(UsernamePasswordMetadata.class);
+		MimeType mimeType = UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE;
+		Map<String, Object> hints = null;
+		DataBuffer dataBuffer = encoder.encodeValue(credentials, factory,
+				elementType, mimeType, hints);
+
+		ByteBufAllocator allocator = ByteBufAllocator.DEFAULT;
+		CompositeByteBuf metadata = allocator.compositeBuffer();
+		CompositeMetadataFlyweight.encodeAndAddMetadata(
+				metadata, allocator, mimeType.toString(), NettyDataBufferFactory.toByteBuf(dataBuffer));
+
+		return DefaultPayload.create(allocator.buffer(),
+				metadata);
 	}
 
 	private PayloadExchange createExchange() {

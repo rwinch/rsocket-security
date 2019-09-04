@@ -39,8 +39,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.metadata.BasicAuthenticationEncoder;
-import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight;
-import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
+import org.springframework.security.rsocket.metadata.UsernamePasswordMetadata;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -110,9 +109,9 @@ public class RSocketMessageHandlerITests {
 	@Test
 	public void retrieveMonoWhenAuthenticationFailedThenException() throws Exception {
 		String data = "rob";
-		UsernamePassword credentials = new UsernamePassword("invalid", "password");
+		UsernamePasswordMetadata credentials = new UsernamePasswordMetadata("invalid", "password");
 		assertThatCode(() -> this.requester.route("secure.retrieve-mono")
-				.metadata(credentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.metadata(credentials, UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE)
 				.data(data)
 				.retrieveMono(String.class)
 				.block()
@@ -123,9 +122,9 @@ public class RSocketMessageHandlerITests {
 	@Test
 	public void retrieveMonoWhenAuthorizedThenGranted() throws Exception {
 		String data = "rob";
-		UsernamePassword credentials = new UsernamePassword("rob", "password");
+		UsernamePasswordMetadata credentials = new UsernamePasswordMetadata("rob", "password");
 		String hiRob = this.requester.route("secure.retrieve-mono")
-				.metadata(credentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.metadata(credentials, UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE)
 				.data(data)
 				.retrieveMono(String.class)
 				.block();

@@ -18,7 +18,6 @@ package org.springframework.security.rsocket.itests;
 
 import io.rsocket.RSocketFactory;
 import io.rsocket.exceptions.ApplicationErrorException;
-import io.rsocket.exceptions.RejectedSetupException;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.transport.netty.server.CloseableChannel;
 import io.rsocket.transport.netty.server.TcpServerTransport;
@@ -40,8 +39,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.metadata.BasicAuthenticationEncoder;
-import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight;
-import org.springframework.security.rsocket.metadata.SecurityMetadataFlyweight.UsernamePassword;
+import org.springframework.security.rsocket.metadata.UsernamePasswordMetadata;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -91,9 +89,10 @@ public class RSocketMessageHandlerConnectionITests {
 
 	@Test
 	public void routeWhenAuthorized() {
-		UsernamePassword credentials = new UsernamePassword("user", "password");
+		UsernamePasswordMetadata credentials =
+				new UsernamePasswordMetadata("user", "password");
 		this.requester = requester()
-				.setupMetadata(credentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.setupMetadata(credentials, UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE)
 				.connectTcp(this.server.address().getHostName(), this.server.address().getPort())
 				.block();
 
@@ -107,9 +106,9 @@ public class RSocketMessageHandlerConnectionITests {
 
 	@Test
 	public void routeWhenNotAuthorized() {
-		UsernamePassword credentials = new UsernamePassword("user", "password");
+		UsernamePasswordMetadata credentials = new UsernamePasswordMetadata("user", "password");
 		this.requester = requester()
-				.setupMetadata(credentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.setupMetadata(credentials, UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE)
 				.connectTcp(this.server.address().getHostName(), this.server.address().getPort())
 				.block();
 
@@ -122,14 +121,14 @@ public class RSocketMessageHandlerConnectionITests {
 
 	@Test
 	public void routeWhenStreamCredentialsAuthorized() {
-		UsernamePassword connectCredentials = new UsernamePassword("user", "password");
+		UsernamePasswordMetadata connectCredentials = new UsernamePasswordMetadata("user", "password");
 		this.requester = requester()
-				.setupMetadata(connectCredentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.setupMetadata(connectCredentials, UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE)
 				.connectTcp(this.server.address().getHostName(), this.server.address().getPort())
 				.block();
 
 		String hiRob = this.requester.route("secure.admin.retrieve-mono")
-				.metadata(new UsernamePassword("admin", "password"), SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.metadata(new UsernamePasswordMetadata("admin", "password"), UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE)
 				.data("rob")
 				.retrieveMono(String.class)
 				.block();
@@ -154,9 +153,9 @@ public class RSocketMessageHandlerConnectionITests {
 
 	@Test
 	public void connectWhenNotAuthorized() {
-		UsernamePassword credentials = new UsernamePassword("evil", "password");
+		UsernamePasswordMetadata credentials = new UsernamePasswordMetadata("evil", "password");
 		this.requester = requester()
-				.setupMetadata(credentials, SecurityMetadataFlyweight.BASIC_AUTHENTICATION_MIME_TYPE)
+				.setupMetadata(credentials, UsernamePasswordMetadata.BASIC_AUTHENTICATION_MIME_TYPE)
 				.connectTcp(this.server.address().getHostName(), this.server.address().getPort())
 				.block();
 
