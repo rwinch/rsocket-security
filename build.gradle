@@ -36,7 +36,9 @@ repositories {
 ext['spring-security.version'] = '5.2.0.BUILD-SNAPSHOT'
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-security:2.2.0.BUILD-SNAPSHOT'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'io.rsocket:rsocket-core:1.0.0-RC3-SNAPSHOT'
     implementation 'org.springframework:spring-messaging'
     implementation 'io.rsocket:rsocket-transport-netty:1.0.0-RC3-SNAPSHOT'

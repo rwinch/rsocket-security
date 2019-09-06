@@ -26,10 +26,15 @@ import org.springframework.security.authorization.AuthorityReactiveAuthorization
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders;
+import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
 import org.springframework.security.rsocket.interceptor.PayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.interceptor.authentication.AnonymousPayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.authentication.AuthenticationPayloadInterceptor;
+import org.springframework.security.rsocket.interceptor.authentication.BearerPayloadExchangeConverter;
 import org.springframework.security.rsocket.interceptor.authorization.AuthorizationPayloadInterceptor;
 import org.springframework.security.rsocket.interceptor.authorization.PayloadExchangeMatcherReactiveAuthorizationManager;
 import org.springframework.security.rsocket.util.PayloadExchangeAuthorizationContext;
@@ -106,6 +111,8 @@ public class RSocketSecurity {
 
 	private BasicAuthenticationSpec basicAuthSpec;
 
+	private JwtSpec jwtSpec;
+
 	private AuthorizePayloadsSpec authorizePayload;
 
 	private ApplicationContext context;
@@ -148,6 +155,44 @@ public class RSocketSecurity {
 		private BasicAuthenticationSpec() {}
 	}
 
+	public RSocketSecurity jwt(Customizer<JwtSpec> jwt) {
+		if (this.jwtSpec == null) {
+			this.jwtSpec = new JwtSpec();
+		}
+		jwt.customize(this.jwtSpec);
+		return this;
+	}
+
+	public class JwtSpec {
+		private ReactiveAuthenticationManager authenticationManager;
+
+		public JwtSpec authenticationManager(ReactiveAuthenticationManager authenticationManager) {
+			this.authenticationManager = authenticationManager;
+			return this;
+		}
+
+		private ReactiveAuthenticationManager getAuthenticationManager() {
+			if (this.authenticationManager != null) {
+				return this.authenticationManager;
+			}
+			ReactiveJwtDecoder jwtDecoder = getBeanOrNull(ReactiveJwtDecoder.class);
+			if (jwtDecoder != null) {
+				this.authenticationManager = new JwtReactiveAuthenticationManager(jwtDecoder);
+				return this.authenticationManager;
+			}
+			return RSocketSecurity.this.authenticationManager;
+		}
+
+		protected AuthenticationPayloadInterceptor build() {
+			ReactiveAuthenticationManager manager = getAuthenticationManager();
+			AuthenticationPayloadInterceptor result = new AuthenticationPayloadInterceptor(manager);
+			result.setAuthenticationConverter(new BearerPayloadExchangeConverter());
+			return result;
+		}
+
+		private JwtSpec() {}
+	}
+
 	public RSocketSecurity authorizePayload(Customizer<AuthorizePayloadsSpec> authorize) {
 		if (this.authorizePayload == null) {
 			this.authorizePayload = new AuthorizePayloadsSpec();
@@ -170,6 +215,9 @@ public class RSocketSecurity {
 
 		if (this.basicAuthSpec != null) {
 			payloadInterceptors.add(this.basicAuthSpec.build());
+		}
+		if (this.jwtSpec != null) {
+			payloadInterceptors.add(this.jwtSpec.build());
 		}
 		payloadInterceptors.add(new AnonymousPayloadInterceptor("anonymousUser"));
 
